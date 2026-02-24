@@ -1,0 +1,110 @@
+:root {
+  --bg: #0b1220;
+  --panel: #101a2f;
+  --text: #e8eefc;
+  --muted: #9bb0d6;
+  --accent: #4f8cff;
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* 左 */
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  padding: 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.navItem:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.navItem.active {
+  background: rgba(79, 140, 255, 0.18);
+  border-color: rgba(79, 140, 255, 0.35);
+  color: var(--text);
+}
+
+/* 右メイン */
+.main {
+  padding: 20px;
+}
+
+/* スマホ下タブ（PCでは隠す） */
+.bottomNav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding-bottom: 64px; /* 下タブ分 */
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .bottomNav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    height: 64px;
+    z-index: 10;
+  }
+
+  .bottomItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+  }
+
+  .bottomItem.active {
+    color: var(--text);
+  }
+}
