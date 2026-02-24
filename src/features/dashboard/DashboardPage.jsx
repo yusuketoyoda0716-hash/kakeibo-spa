@@ -1,23 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   PieChart,
   Pie,
   Tooltip,
   Cell,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
 } from "recharts";
 import { useTransactions } from "../transactions/hooks/useTransactions";
+import { useRecurring } from "../settings/hooks/useRecurring";
 
 function thisMonth() {
-  return new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  return new Date().toISOString().slice(0, 7);
 }
 
 function toMonth(dateStr) {
@@ -38,13 +31,18 @@ const COLORS = [
 ];
 
 export default function DashboardPage() {
-  const { transactions } = useTransactions();
+  const { transactions, addTransactions } = useTransactions();
+  const { recurring } = useRecurring();
   const month = thisMonth();
 
+  const [applyMsg, setApplyMsg] = useState("");
+
+  // 今月の取引だけ抽出
   const filtered = useMemo(() => {
     return transactions.filter((t) => toMonth(t.date) === month);
   }, [transactions, month]);
 
+  // サマリー計算
   const summary = useMemo(() => {
     const income = filtered
       .filter((t) => t.type === "income")
@@ -61,6 +59,7 @@ export default function DashboardPage() {
     };
   }, [filtered]);
 
+  // 支出カテゴリ集計
   const byCategory = useMemo(() => {
     const map = new Map();
     for (const t of filtered) {
@@ -72,28 +71,39 @@ export default function DashboardPage() {
       .sort((a, b) => b.value - a.value);
   }, [filtered]);
 
-  const monthly = useMemo(() => {
-    // 全取引を YYYY-MM ごとに集計
-    const map = new Map();
+  // 定期取引を今月に反映
+  const applyRecurringForThisMonth = () => {
+    const monthKey = month;
 
-    for (const t of transactions) {
-      const m = String(t.date || "").slice(0, 7); // YYYY-MM
-      if (!m) continue;
+    const appliedIds = new Set(
+      transactions
+        .filter((t) => t.source === "recurring" && t.appliedMonth === monthKey)
+        .map((t) => t.recurringId)
+    );
 
-      if (!map.has(m)) map.set(m, { month: m, income: 0, expense: 0, balance: 0 });
+    const toAdd = recurring
+      .filter((r) => !appliedIds.has(r.id))
+      .map((r) => ({
+        id: crypto.randomUUID(),
+        date: `${monthKey}-01`,
+        type: r.type,
+        category: r.category,
+        amount: r.amount,
+        note: r.note || "",
+        createdAt: Date.now(),
+        source: "recurring",
+        recurringId: r.id,
+        appliedMonth: monthKey,
+      }));
 
-      const row = map.get(m);
-      if (t.type === "income") row.income += t.amount;
-      if (t.type === "expense") row.expense += t.amount;
+    if (toAdd.length === 0) {
+      setApplyMsg("今月はすでに反映済みです");
+      return;
     }
 
-    const rows = Array.from(map.values()).sort((a, b) => a.month.localeCompare(b.month));
-    for (const r of rows) r.balance = r.income - r.expense;
-
-    // 直近12ヶ月だけに絞る（ポートフォリオ的に見やすい）
-    return rows.slice(-12);
-  }, [transactions]);
-
+    addTransactions(toAdd);
+    setApplyMsg(`今月に ${toAdd.length} 件反映しました`);
+  };
 
   return (
     <div style={{ maxWidth: 900 }}>
@@ -115,6 +125,15 @@ export default function DashboardPage() {
         <Card title="収支" value={`${summary.balance.toLocaleString()}円`} />
       </div>
 
+      {/* 定期取引反映ボタン */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
+        <button onClick={applyRecurringForThisMonth}>
+          今月の定期取引を反映
+        </button>
+        <span style={{ opacity: 0.75, fontSize: 13 }}>{applyMsg}</span>
+      </div>
+
+      {/* 円グラフ & ランキング */}
       <div
         style={{
           display: "grid",
@@ -122,7 +141,6 @@ export default function DashboardPage() {
           gap: 16,
         }}
       >
-        {/* 円グラフ */}
         <div
           style={{
             border: "1px solid rgba(255,255,255,0.12)",
@@ -145,7 +163,7 @@ export default function DashboardPage() {
                   <Pie data={byCategory} dataKey="value" nameKey="name">
                     {byCategory.map((entry, index) => (
                       <Cell
-                        key={`cell-${entry.name}`}
+                        key={entry.name}
                         fill={COLORS[index % COLORS.length]}
                       />
                     ))}
@@ -157,7 +175,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* ランキング */}
         <div
           style={{
             border: "1px solid rgba(255,255,255,0.12)",
@@ -176,7 +193,10 @@ export default function DashboardPage() {
           ) : (
             <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
               {byCategory.slice(0, 8).map((c) => (
-                <li key={c.name} style={{ display: "flex", justifyContent: "space-between" }}>
+                <li
+                  key={c.name}
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <span>{c.name}</span>
                   <strong>{c.value.toLocaleString()}円</strong>
                 </li>
@@ -185,16 +205,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-
-      <p style={{ opacity: 0.7, marginTop: 14, fontSize: 13 }}>
-        ※ グラフはポートフォリオ向けに「支出カテゴリ内訳」を可視化しています
-      </p>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .grid2 { grid-template-columns: 1fr; }
-        }
-      `}</style>
     </div>
   );
 }

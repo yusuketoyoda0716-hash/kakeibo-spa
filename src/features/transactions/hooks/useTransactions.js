@@ -6,26 +6,27 @@ export function useTransactions() {
   const [transactions, setTransactions] = useLocalStorage(STORAGE_KEY, []);
 
   const addTransaction = (tx) => {
-    setTransactions([tx, ...transactions]);
+    setTransactions((prev) => [tx, ...prev]);
+  };
+
+  const addTransactions = (txs) => {
+    setTransactions((prev) => [...txs, ...prev]);
   };
 
   const deleteTransaction = (id) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
   const updateTransaction = (id, patch) => {
-    setTransactions(
-      transactions.map((t) =>
-        t.id === id
-          ? { ...t, ...patch, updatedAt: Date.now() }
-          : t
-      )
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...patch, updatedAt: Date.now() } : t))
     );
   };
 
   return {
     transactions,
     addTransaction,
+    addTransactions,
     deleteTransaction,
     updateTransaction,
   };
