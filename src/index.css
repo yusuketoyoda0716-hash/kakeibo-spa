@@ -1,5 +1,6 @@
+/* ===== Base ===== */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -7,70 +8,121 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
-  font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* App tokens */
+  --tap: 44px;
+  --r: 14px;
+  --gap: 12px;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  font-weight: 600;
+  color: #7aa2ff;
+  text-decoration: none;
 }
 a:hover {
-  color: #535bf2;
+  opacity: 0.9;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+/* ===== Inputs / Buttons (Mobile-first) ===== */
+/* iOSの入力ズーム防止 + タップしやすさ */
+input,
+select,
+textarea,
+button {
+  min-height: var(--tap);
+  font-size: 16px;
+  line-height: 1.2;
+  font-family: inherit;
+  color: inherit;
 }
 
 button {
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: var(--r);
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  background: rgba(79, 140, 255, 0.18);
+  border-color: rgba(79, 140, 255, 0.35);
   cursor: pointer;
-  transition: border-color 0.25s;
+  font-weight: 800;
+  transition: background 0.2s, border-color 0.2s, transform 0.02s;
 }
 button:hover {
-  border-color: #646cff;
+  background: rgba(79, 140, 255, 0.24);
+  border-color: rgba(79, 140, 255, 0.55);
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:active {
+  transform: translateY(1px);
 }
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-/* ===== form ui ===== */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--r);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  outline: none;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(79, 140, 255, 0.6);
+}
+
+/* labelを広めにして押しやすく */
+label {
+  display: grid;
+  gap: 6px;
+}
+
+/* ===== App utility blocks ===== */
+.card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stack {
+  display: grid;
+  gap: var(--gap);
+}
+
+/* ===== Form UI (existing class names) ===== */
 .form {
   display: grid;
   gap: 12px;
+  width: 100%;
   max-width: 520px;
 }
 
@@ -84,47 +136,32 @@ button:focus-visible {
   color: rgba(255, 255, 255, 0.75);
 }
 
+/* Keep your current class names working */
 .input,
 .select,
 .button {
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
-  color: inherit;
-  outline: none;
 }
 
-.input:focus,
-.select:focus {
-  border-color: rgba(79, 140, 255, 0.6);
-}
-
+/* .button class should look like a button */
 .button {
-  cursor: pointer;
-  font-weight: 700;
-  border-color: rgba(79, 140, 255, 0.35);
-  background: rgba(79, 140, 255, 0.18);
+  /* button elementにも付いてる前提 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.button:hover {
-  border-color: rgba(79, 140, 255, 0.55);
-  background: rgba(79, 140, 255, 0.24);
-}
-
-
+/* Rows */
 .row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
-
 .row > * {
   flex: 1 1 160px;
 }
 
+/* Radio row */
 .radioRow {
   display: flex;
   gap: 14px;
@@ -134,9 +171,50 @@ button:focus-visible {
   font-size: 13px;
 }
 
+/* Help text */
 .helpText {
   margin-top: 10px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* ===== Responsive tweaks ===== */
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .row > * {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  /* スマホはボタンを押しやすくフル幅に */
+  .button {
+    width: 100%;
+  }
+}
+
+/* ===== Light mode ===== */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  body {
+    background: #ffffff;
+  }
+  a {
+    color: #3a63ff;
+  }
+  input,
+  select,
+  textarea {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.03);
+  }
+  .card {
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
