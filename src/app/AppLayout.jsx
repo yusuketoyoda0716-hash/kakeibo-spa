@@ -35,12 +35,12 @@ export default function AppLayout() {
         </nav>
       </aside>
 
-      {/* 右メイン */}
+      {/* メイン */}
       <main className="main">
         <Outlet />
       </main>
 
-      {/* スマホ: 下タブ */}
+      {/* スマホ: 下タブ（常に表示） */}
       <nav className="bottomNav">
         {navItems.map((item) => {
           const Icon = item.icon;

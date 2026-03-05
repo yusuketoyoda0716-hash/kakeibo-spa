@@ -1,11 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Tooltip,
-  Cell,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell } from "recharts";
 import { useTransactions } from "../transactions/hooks/useTransactions";
 import { useRecurring } from "../settings/hooks/useRecurring";
 
@@ -29,6 +23,46 @@ const COLORS = [
   "#eab308",
   "#38bdf8",
 ];
+
+// ✅ 白テーマ向けの“見える線”カード
+const cardStyle = {
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  padding: 12,
+  background: "#ffffff",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+};
+
+// ✅ 文字色（opacity頼みをやめる）
+const mutedText = { color: "#6b7280" };
+
+// ✅ Tooltip（白テーマで読みやすい）
+function YenTooltip({ active, payload }) {
+  if (!active || !payload || payload.length === 0) return null;
+  const p = payload[0];
+  const name = p?.name ?? "";
+  const value = typeof p?.value === "number" ? p.value : Number(p?.value ?? 0);
+
+  return (
+    <div
+      style={{
+        background: "#ffffff",
+        border: "1px solid #e5e7eb",
+        borderRadius: 12,
+        padding: "10px 12px",
+        boxShadow: "0 6px 16px rgba(0,0,0,0.10)",
+        color: "#111827",
+        minWidth: 140,
+      }}
+    >
+      <div style={{ fontWeight: 900, marginBottom: 4 }}>{name}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+        <span style={mutedText}>金額</span>
+        <span style={{ fontWeight: 900 }}>{value.toLocaleString()}円</span>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { transactions, addTransactions } = useTransactions();
@@ -108,7 +142,7 @@ export default function DashboardPage() {
   return (
     <div style={{ maxWidth: 900 }}>
       <h1>ダッシュボード</h1>
-      <p style={{ opacity: 0.8 }}>表示月：{month}</p>
+      <p style={mutedText}>表示月：{month}</p>
 
       {/* サマリーカード */}
       <div
@@ -126,11 +160,17 @@ export default function DashboardPage() {
       </div>
 
       {/* 定期取引反映ボタン */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
-        <button onClick={applyRecurringForThisMonth}>
-          今月の定期取引を反映
-        </button>
-        <span style={{ opacity: 0.75, fontSize: 13 }}>{applyMsg}</span>
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          marginBottom: 16,
+          flexWrap: "wrap",
+        }}
+      >
+        <button onClick={applyRecurringForThisMonth}>今月の定期取引を反映</button>
+        <span style={{ ...mutedText, fontSize: 13 }}>{applyMsg}</span>
       </div>
 
       {/* 円グラフ & ランキング */}
@@ -141,21 +181,13 @@ export default function DashboardPage() {
           gap: 16,
         }}
       >
-        <div
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 12,
-            padding: 12,
-            background: "rgba(255,255,255,0.03)",
-            minHeight: 280,
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>
+        <div style={{ ...cardStyle, minHeight: 280 }}>
+          <div style={{ fontWeight: 800, marginBottom: 8 }}>
             支出カテゴリ内訳（今月）
           </div>
 
           {byCategory.length === 0 ? (
-            <p style={{ opacity: 0.8 }}>今月の支出がありません</p>
+            <p style={mutedText}>今月の支出がありません</p>
           ) : (
             <div style={{ width: "100%", height: 240 }}>
               <ResponsiveContainer>
@@ -168,28 +200,22 @@ export default function DashboardPage() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip />
+
+                  {/* ✅ Tooltipを白テーマ向けに */}
+                  <Tooltip content={<YenTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           )}
         </div>
 
-        <div
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 12,
-            padding: 12,
-            background: "rgba(255,255,255,0.03)",
-            minHeight: 280,
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>
+        <div style={{ ...cardStyle, minHeight: 280 }}>
+          <div style={{ fontWeight: 800, marginBottom: 8 }}>
             支出カテゴリTop
           </div>
 
           {byCategory.length === 0 ? (
-            <p style={{ opacity: 0.8 }}>データがありません</p>
+            <p style={mutedText}>データがありません</p>
           ) : (
             <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
               {byCategory.slice(0, 8).map((c) => (
@@ -213,14 +239,15 @@ function Card({ title, value }) {
   return (
     <div
       style={{
-        border: "1px solid rgba(255,255,255,0.12)",
+        border: "1px solid #e5e7eb",
         borderRadius: 12,
         padding: 12,
-        background: "rgba(255,255,255,0.03)",
+        background: "#ffffff",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
       }}
     >
-      <div style={{ opacity: 0.8, fontSize: 13 }}>{title}</div>
-      <div style={{ fontWeight: 800, fontSize: 18 }}>{value}</div>
+      <div style={{ color: "#6b7280", fontSize: 13 }}>{title}</div>
+      <div style={{ fontWeight: 900, fontSize: 18 }}>{value}</div>
     </div>
   );
 }

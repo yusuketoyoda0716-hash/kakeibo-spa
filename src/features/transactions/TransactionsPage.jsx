@@ -3,11 +3,22 @@ import { useTransactions } from "./hooks/useTransactions";
 import { useCategories } from "../settings/hooks/useCategories";
 
 function toMonth(dateStr) {
-  return String(dateStr || "").slice(0, 7); // "YYYY-MM"
+  return String(dateStr || "").slice(0, 7);
 }
+
 function thisMonth() {
   return new Date().toISOString().slice(0, 7);
 }
+
+const cardStyle = {
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  padding: 12,
+  background: "#ffffff",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+};
+
+const muted = { color: "#6b7280" };
 
 export default function TransactionsPage() {
   const { transactions, deleteTransaction, updateTransaction } = useTransactions();
@@ -15,12 +26,14 @@ export default function TransactionsPage() {
 
   const [month, setMonth] = useState(thisMonth());
 
-  // 編集状態
+  // ✅ ここ（コンポーネント内に置く）
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState({
     date: "",
     type: "expense",
-    categoryMode: "select", // select/custom
+    categoryMode: "select",
     categorySelected: "",
     categoryCustom: "",
     amount: "",
@@ -35,20 +48,24 @@ export default function TransactionsPage() {
     const income = filtered
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0);
+
     const expense = filtered
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
+
     return { income, expense, balance: income - expense };
   }, [filtered]);
 
   const startEdit = (t) => {
     setEditingId(t.id);
+
     const inList = categories.includes(t.category);
+
     setDraft({
       date: t.date,
       type: t.type,
       categoryMode: inList ? "select" : "custom",
-      categorySelected: inList ? t.category : (categories[0] ?? "食費"),
+      categorySelected: inList ? t.category : categories[0] ?? "食費",
       categoryCustom: inList ? "" : t.category,
       amount: String(t.amount),
       note: t.note ?? "",
@@ -61,8 +78,10 @@ export default function TransactionsPage() {
 
   const saveEdit = (id) => {
     const amountNum = Number(draft.amount);
+
     const category =
       draft.categoryMode === "select" ? draft.categorySelected : draft.categoryCustom;
+
     const c = String(category || "").trim();
 
     if (!draft.date) return;
@@ -91,7 +110,7 @@ export default function TransactionsPage() {
       {/* 月フィルター */}
       <div style={{ marginBottom: 14 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ opacity: 0.8 }}>表示月</span>
+          <span style={muted}>表示月</span>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </label>
       </div>
@@ -113,38 +132,36 @@ export default function TransactionsPage() {
 
       {/* 一覧 */}
       {filtered.length === 0 ? (
-        <p>この月の取引はありません（「追加」から登録できます）</p>
+        <p style={muted}>この月の取引はありません（「追加」から登録できます）</p>
       ) : (
         <ul style={{ display: "grid", gap: 10, padding: 0, listStyle: "none", maxWidth: 720 }}>
           {filtered.map((t) => {
             const isEditing = editingId === t.id;
 
             return (
-              <li
-                key={t.id}
-                style={{
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 12,
-                  padding: 12,
-                  background: "rgba(255,255,255,0.03)",
-                }}
-              >
+              <li key={t.id} style={cardStyle}>
                 {!isEditing ? (
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                     <div>
-                      <div style={{ fontWeight: 700 }}>
+                      <div style={{ fontWeight: 800 }}>
                         {t.type === "expense" ? "支出" : "収入"} / {t.category}
                       </div>
-                      <div style={{ opacity: 0.8, fontSize: 13 }}>
+                      <div style={{ ...muted, fontSize: 13 }}>
                         {t.date} {t.note ? `・${t.note}` : ""}
                       </div>
                     </div>
 
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: 800 }}>{t.amount.toLocaleString()}円</div>
+                      <div style={{ fontWeight: 900 }}>{t.amount.toLocaleString()}円</div>
+
                       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                        <button onClick={() => startEdit(t)}>編集</button>
-                        <button onClick={() => deleteTransaction(t.id)}>削除</button>
+                        <button className="btnSuccess btnSmall" onClick={() => startEdit(t)}>
+                          編集
+                        </button>
+
+                        <button className="btnDanger btnSmall" onClick={() => setDeleteTarget(t)}>
+                          削除
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -184,7 +201,7 @@ export default function TransactionsPage() {
 
                     <fieldset
                       style={{
-                        border: "1px solid rgba(255,255,255,0.12)",
+                        border: "1px solid #e5e7eb",
                         borderRadius: 12,
                         padding: 12,
                       }}
@@ -201,6 +218,7 @@ export default function TransactionsPage() {
                           />
                           選択
                         </label>
+
                         <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <input
                             type="radio"
@@ -215,9 +233,7 @@ export default function TransactionsPage() {
                       {draft.categoryMode === "select" ? (
                         <select
                           value={draft.categorySelected}
-                          onChange={(e) =>
-                            setDraft({ ...draft, categorySelected: e.target.value })
-                          }
+                          onChange={(e) => setDraft({ ...draft, categorySelected: e.target.value })}
                           disabled={categories.length === 0}
                         >
                           {categories.length === 0 ? (
@@ -233,9 +249,7 @@ export default function TransactionsPage() {
                       ) : (
                         <input
                           value={draft.categoryCustom}
-                          onChange={(e) =>
-                            setDraft({ ...draft, categoryCustom: e.target.value })
-                          }
+                          onChange={(e) => setDraft({ ...draft, categoryCustom: e.target.value })}
                           placeholder="例：交際費"
                         />
                       )}
@@ -250,7 +264,10 @@ export default function TransactionsPage() {
                     </label>
 
                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                      <button onClick={() => saveEdit(t.id)}>保存</button>
+                      <button className="btnSuccess" onClick={() => saveEdit(t.id)}>
+                        保存
+                      </button>
+
                       <button onClick={cancelEdit}>キャンセル</button>
                     </div>
                   </div>
@@ -260,22 +277,42 @@ export default function TransactionsPage() {
           })}
         </ul>
       )}
+
+      {/* ✅ 削除モーダル（returnの一番最後、Card関数の前に置く） */}
+      {deleteTarget && (
+        <div className="modalOverlay" onClick={() => setDeleteTarget(null)}>
+          <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0 }}>取引を削除しますか？</h3>
+
+            <p style={{ color: "#6b7280", marginBottom: 12 }}>
+              {deleteTarget.category} / {deleteTarget.amount.toLocaleString()}円
+            </p>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setDeleteTarget(null)}>キャンセル</button>
+
+              <button
+                className="btnDanger"
+                onClick={() => {
+                  deleteTransaction(deleteTarget.id);
+                  setDeleteTarget(null);
+                }}
+              >
+                削除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function Card({ title, value }) {
   return (
-    <div
-      style={{
-        border: "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 12,
-        padding: 12,
-        background: "rgba(255,255,255,0.03)",
-      }}
-    >
-      <div style={{ opacity: 0.8, fontSize: 13 }}>{title}</div>
-      <div style={{ fontWeight: 800, fontSize: 18 }}>{value}</div>
+    <div style={cardStyle}>
+      <div style={{ color: "#6b7280", fontSize: 13 }}>{title}</div>
+      <div style={{ fontWeight: 900, fontSize: 18 }}>{value}</div>
     </div>
   );
 }
