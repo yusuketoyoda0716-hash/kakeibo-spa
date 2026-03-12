@@ -7,7 +7,7 @@ React + LocalStorage で作成したシンプルな家計簿アプリです。
 
 ## デモ
 
-https://（VercelのURL）
+kakeibo-spa.vercel.app
 
 ---
 
