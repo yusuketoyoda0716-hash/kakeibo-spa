@@ -1,16 +1,71 @@
-# React + Vite
+# 家計簿SPAアプリ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + LocalStorage で作成したシンプルな家計簿アプリです。
+スマホUIを意識したSPAとして作成しています。
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## デモ
 
-## React Compiler
+https://（VercelのURL）
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 使用技術
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* React
+* Vite
+* JavaScript
+* Recharts（グラフ）
+* LocalStorage
+
+---
+
+## 主な機能
+
+### ① 取引追加（電卓UI）
+
+* テンキー入力
+* 支出 / 収入切替
+* カテゴリ選択
+* メモ保存
+
+### ② ダッシュボード
+
+* 月ごとの収支
+* 支出カテゴリの円グラフ
+* 支出ランキング
+
+### ③ 取引管理
+
+* 月フィルター
+* 編集
+* 削除（確認モーダル）
+
+### ④ カテゴリ管理
+
+* カテゴリ追加
+* カテゴリ削除
+
+### ⑤ 定期取引
+
+* 毎月の固定費テンプレ
+* ワンクリックで反映
+
+---
+
+## 工夫した点
+
+* SPAとして画面遷移なしで操作できるUI
+* スマホ操作を意識した電卓型入力
+* LocalStorageを利用したデータ管理
+* 再利用可能なカスタムHook設計
+
+---
+
+## 今後の改善
+
+* Firebase連携
+* PWA化
+* カテゴリアイコン機能
+* CSVエクスポート
