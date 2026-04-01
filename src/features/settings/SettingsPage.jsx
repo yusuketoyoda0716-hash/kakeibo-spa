@@ -2,19 +2,7 @@ import { useState } from "react";
 import { useCategories } from "./hooks/useCategories";
 import { useRecurring } from "./hooks/useRecurring";
 
-// 白テーマ向け：見える線
-const cardStyle = {
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: 12,
-  background: "#ffffff",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-};
-
-const mutedText = { color: "#6b7280" };
-
 export default function SettingsPage() {
-  // カテゴリ
   const { categories, addCategory, removeCategory } = useCategories();
   const [name, setName] = useState("");
 
@@ -23,7 +11,6 @@ export default function SettingsPage() {
     setName("");
   };
 
-  // 定期取引（テンプレ）
   const { recurring, addRecurring, deleteRecurring } = useRecurring();
   const [rType, setRType] = useState("expense");
   const [rCategory, setRCategory] = useState("家賃");
@@ -46,38 +33,28 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div className="settings">
       <h1>設定</h1>
 
       {/* カテゴリ管理 */}
-      <section style={{ marginTop: 14, ...cardStyle }}>
+      <section className="panelCard settings__section">
         <h2 style={{ marginTop: 0 }}>カテゴリ管理</h2>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <div className="settings__addRow">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="カテゴリ名（例：交際費）"
-            style={{ flex: 1 }}
           />
           <button onClick={onAdd}>追加</button>
         </div>
 
         {categories.length === 0 ? (
-          <p style={mutedText}>カテゴリがありません</p>
+          <p className="muted">カテゴリがありません</p>
         ) : (
-          <ul style={{ paddingLeft: 18, margin: 0, display: "grid", gap: 8 }}>
+          <ul className="settings__list">
             {categories.map((c) => (
-              <li
-                key={c}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 10,
-                  paddingBottom: 8,
-                  borderBottom: "1px solid #e5e7eb",
-                }}
-              >
+              <li key={c} className="settings__listItem">
                 <span>{c}</span>
                 <button onClick={() => removeCategory(c)}>削除</button>
               </li>
@@ -85,16 +62,16 @@ export default function SettingsPage() {
           </ul>
         )}
 
-        <p style={{ ...mutedText, marginTop: 12, fontSize: 13 }}>
+        <p className="panelSub" style={{ marginTop: 12 }}>
           ※ 取引データとは別でブラウザに保存されます
         </p>
       </section>
 
       {/* 定期取引（テンプレ） */}
-      <section style={{ marginTop: 14, ...cardStyle }}>
+      <section className="panelCard settings__section">
         <h2 style={{ marginTop: 0 }}>定期取引（テンプレ）</h2>
 
-        <div style={{ display: "grid", gap: 10, maxWidth: 520 }}>
+        <div className="settings__form">
           <label>
             種別
             <select value={rType} onChange={(e) => setRType(e.target.value)}>
@@ -126,22 +103,13 @@ export default function SettingsPage() {
           <button onClick={onAddRecurring}>テンプレ追加</button>
         </div>
 
-        <div style={{ marginTop: 12 }}>
+        <div className="settings__recurringList">
           {recurring.length === 0 ? (
-            <p style={mutedText}>定期取引テンプレはまだありません</p>
+            <p className="muted">定期取引テンプレはまだありません</p>
           ) : (
-            <ul style={{ paddingLeft: 18, margin: 0, display: "grid", gap: 8 }}>
+            <ul className="settings__list">
               {recurring.map((r) => (
-                <li
-                  key={r.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    paddingBottom: 8,
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
+                <li key={r.id} className="settings__listItem">
                   <span>
                     {r.type === "expense" ? "支出" : "収入"} / {r.category} /{" "}
                     {r.amount.toLocaleString()}円

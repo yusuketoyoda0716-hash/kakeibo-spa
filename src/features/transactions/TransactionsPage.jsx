@@ -10,25 +10,12 @@ function thisMonth() {
   return new Date().toISOString().slice(0, 7);
 }
 
-const cardStyle = {
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: 12,
-  background: "#ffffff",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-};
-
-const muted = { color: "#6b7280" };
-
 export default function TransactionsPage() {
   const { transactions, deleteTransaction, updateTransaction } = useTransactions();
   const { categories, addCategory } = useCategories();
 
   const [month, setMonth] = useState(thisMonth());
-
-  // ✅ ここ（コンポーネント内に置く）
   const [deleteTarget, setDeleteTarget] = useState(null);
-
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState({
     date: "",
@@ -108,23 +95,15 @@ export default function TransactionsPage() {
       <h1>取引一覧</h1>
 
       {/* 月フィルター */}
-      <div style={{ marginBottom: 14 }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={muted}>表示月</span>
+      <div className="monthFilter">
+        <label>
+          <span className="muted">表示月</span>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </label>
       </div>
 
       {/* サマリー */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 12,
-          maxWidth: 720,
-          marginBottom: 16,
-        }}
-      >
+      <div className="summaryCards">
         <Card title="収入" value={`${summary.income.toLocaleString()}円`} />
         <Card title="支出" value={`${summary.expense.toLocaleString()}円`} />
         <Card title="収支" value={`${summary.balance.toLocaleString()}円`} />
@@ -132,29 +111,29 @@ export default function TransactionsPage() {
 
       {/* 一覧 */}
       {filtered.length === 0 ? (
-        <p style={muted}>この月の取引はありません（「追加」から登録できます）</p>
+        <p className="muted">この月の取引はありません（「追加」から登録できます）</p>
       ) : (
-        <ul style={{ display: "grid", gap: 10, padding: 0, listStyle: "none", maxWidth: 720 }}>
+        <ul className="txnList">
           {filtered.map((t) => {
             const isEditing = editingId === t.id;
 
             return (
-              <li key={t.id} style={cardStyle}>
+              <li key={t.id} className="panelCard">
                 {!isEditing ? (
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div className="txnRow">
                     <div>
                       <div style={{ fontWeight: 800 }}>
                         {t.type === "expense" ? "支出" : "収入"} / {t.category}
                       </div>
-                      <div style={{ ...muted, fontSize: 13 }}>
+                      <div className="panelSub">
                         {t.date} {t.note ? `・${t.note}` : ""}
                       </div>
                     </div>
 
-                    <div style={{ textAlign: "right" }}>
+                    <div className="txnRow__right">
                       <div style={{ fontWeight: 900 }}>{t.amount.toLocaleString()}円</div>
 
-                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                      <div className="txnRow__buttons">
                         <button className="btnSuccess btnSmall" onClick={() => startEdit(t)}>
                           編集
                         </button>
@@ -166,8 +145,8 @@ export default function TransactionsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <div className="txnEditForm">
+                    <div className="txnEditFields">
                       <label>
                         日付
                         <input
@@ -199,17 +178,11 @@ export default function TransactionsPage() {
                       </label>
                     </div>
 
-                    <fieldset
-                      style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: 12,
-                        padding: 12,
-                      }}
-                    >
+                    <fieldset className="txnCatFieldset">
                       <legend style={{ padding: "0 6px" }}>カテゴリ</legend>
 
-                      <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div className="txnCatModes">
+                        <label className="txnCatMode">
                           <input
                             type="radio"
                             name={`catmode-${t.id}`}
@@ -219,7 +192,7 @@ export default function TransactionsPage() {
                           選択
                         </label>
 
-                        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <label className="txnCatMode">
                           <input
                             type="radio"
                             name={`catmode-${t.id}`}
@@ -263,7 +236,7 @@ export default function TransactionsPage() {
                       />
                     </label>
 
-                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                    <div className="txnEditActions">
                       <button className="btnSuccess" onClick={() => saveEdit(t.id)}>
                         保存
                       </button>
@@ -278,17 +251,17 @@ export default function TransactionsPage() {
         </ul>
       )}
 
-      {/* ✅ 削除モーダル（returnの一番最後、Card関数の前に置く） */}
+      {/* 削除モーダル */}
       {deleteTarget && (
         <div className="modalOverlay" onClick={() => setDeleteTarget(null)}>
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ marginTop: 0 }}>取引を削除しますか？</h3>
 
-            <p style={{ color: "#6b7280", marginBottom: 12 }}>
+            <p className="muted">
               {deleteTarget.category} / {deleteTarget.amount.toLocaleString()}円
             </p>
 
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <div className="modalActions">
               <button onClick={() => setDeleteTarget(null)}>キャンセル</button>
 
               <button
@@ -310,8 +283,8 @@ export default function TransactionsPage() {
 
 function Card({ title, value }) {
   return (
-    <div style={cardStyle}>
-      <div style={{ color: "#6b7280", fontSize: 13 }}>{title}</div>
+    <div className="panelCard">
+      <div className="panelSub">{title}</div>
       <div style={{ fontWeight: 900, fontSize: 18 }}>{value}</div>
     </div>
   );

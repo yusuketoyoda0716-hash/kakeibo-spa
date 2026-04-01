@@ -1,12 +1,25 @@
 /* =========================================
-   Base
+   CSS Variables
 ========================================= */
 
 :root {
+  /* Theme */
+  --bg: #f6f7fb;
+  --panel: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --border: #e5e7eb;
+
+  /* Spacing / sizing */
   --tap: 44px;
   --r: 14px;
   --gap: 12px;
 }
+
+/* =========================================
+   Base
+========================================= */
 
 * {
   box-sizing: border-box;
@@ -15,6 +28,8 @@
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
@@ -56,7 +71,7 @@ textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: var(--r);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.05);
   outline: none;
 }
@@ -68,6 +83,319 @@ textarea:focus {
 }
 
 /* =========================================
+   Utility
+========================================= */
+
+.muted {
+  color: var(--muted);
+}
+
+/* =========================================
+   Cards / Panels
+========================================= */
+
+.panelCard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.panelTitle {
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.panelSub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.listCard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.listRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.listRow:first-child {
+  border-top: 0;
+}
+
+.listLeft {
+  display: grid;
+  gap: 4px;
+}
+
+.listPrimary {
+  font-weight: 800;
+}
+
+.listMeta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.listRight {
+  text-align: right;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* =========================================
+   Button colors
+========================================= */
+
+.btnDanger {
+  background: #ef4444;
+  border: 1px solid #ef4444;
+  color: white;
+}
+
+.btnDanger:hover {
+  background: #dc2626;
+}
+
+.btnSuccess {
+  background: #22c55e;
+  border: 1px solid #22c55e;
+  color: white;
+}
+
+.btnSuccess:hover {
+  background: #16a34a;
+}
+
+.btnSmall {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* =========================================
+   Modal
+========================================= */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 320px;
+}
+
+.modalCard p {
+  margin-bottom: 12px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* =========================================
+   Dashboard
+========================================= */
+
+.dashboard {
+  max-width: 900px;
+  display: grid;
+  gap: 20px;
+}
+
+.dashboardCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dashboardCharts {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+}
+
+.dashboardCard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  min-height: 280px;
+}
+
+@media (max-width: 768px) {
+  .dashboardCards {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardCharts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   Transactions
+========================================= */
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 720px;
+}
+
+.monthFilter {
+  margin-bottom: 14px;
+}
+
+.monthFilter label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.txnList {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+  max-width: 720px;
+}
+
+.txnRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.txnRow__right {
+  text-align: right;
+}
+
+.txnRow__buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.txnEditForm {
+  display: grid;
+  gap: 10px;
+}
+
+.txnEditFields {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.txnCatFieldset {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.txnCatModes {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.txnCatMode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.txnEditActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .summaryCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   Settings
+========================================= */
+
+.settings {
+  max-width: 720px;
+}
+
+.settings__section {
+  margin-top: 14px;
+}
+
+.settings__addRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.settings__addRow input {
+  flex: 1;
+}
+
+.settings__list {
+  padding-left: 18px;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.settings__listItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings__form {
+  display: grid;
+  gap: 10px;
+  max-width: 520px;
+}
+
+.settings__recurringList {
+  margin-top: 12px;
+}
+
+/* =========================================
    AddPage - Keypad UI
 ========================================= */
 
@@ -75,14 +403,10 @@ textarea:focus {
   min-height: 100dvh;
   padding: 20px;
   padding-bottom: 180px;
-
   background: var(--panel);
-
   border-radius: 18px;
   border: 1px solid var(--border);
-
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   display: grid;
   gap: 24px;
 }
@@ -106,7 +430,6 @@ textarea:focus {
 }
 
 /* 金額表示 */
-
 .add2__amount {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -128,7 +451,6 @@ textarea:focus {
 }
 
 /* テンキー */
-
 .pad {
   display: grid;
   gap: 12px;
@@ -145,7 +467,6 @@ textarea:focus {
   border-radius: 16px;
   font-size: 24px;
   font-weight: 900;
-
   background: #f3f4f6;
   border: 1px solid var(--border);
 }
@@ -160,19 +481,18 @@ textarea:focus {
   font-weight: 800;
 }
 
-/* 下固定バー（下タブの上に表示） */
-
+/* 下固定バー */
 .add2__bottom {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 64px; /* 下タブの高さ */
+  bottom: 64px;
   display: grid;
   grid-template-columns: 1fr 120px;
   gap: 12px;
   padding: 14px 16px;
   background: var(--panel);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 20;
 }
 
@@ -192,10 +512,25 @@ textarea:focus {
 }
 
 /* 日付・メモ */
-
 .add2__meta {
   display: grid;
   gap: 12px;
+}
+
+/* Add 下部カテゴリボタン */
+.add2__catBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catBtn__icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 /* =========================================
@@ -211,7 +546,7 @@ textarea:focus {
 .sheet__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .sheet__panel {
@@ -221,9 +556,7 @@ textarea:focus {
   bottom: 0;
   max-height: 70vh;
   border-radius: 18px 18px 0 0;
-
-  background: var(--panel);   
-
+  background: var(--panel);
   border: 1px solid var(--border);
   display: grid;
   grid-template-rows: auto 1fr;
@@ -234,7 +567,7 @@ textarea:focus {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sheet__title {
@@ -251,26 +584,6 @@ textarea:focus {
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
 }
 
-.sheet__item {
-  width: 100%;
-  text-align: left;
-  border-radius: 14px;
-  min-height: 48px;
-  margin-bottom: 10px;
-  font-weight: 900;
-}
-
-.sheet__item.is-active {
-  background: rgba(79, 140, 255, 0.35);
-  border-color: rgba(79, 140, 255, 0.6);
-}
-
-.sheet__empty {
-  padding: 14px;
-  opacity: .8;
-}
-
-/* Category sheet: sections + icons */
 .sheet__sectionTitle {
   font-size: 12px;
   font-weight: 900;
@@ -280,8 +593,13 @@ textarea:focus {
 
 .sheet__divider {
   height: 1px;
-  background: rgba(0,0,0,0.08);
+  background: rgba(0, 0, 0, 0.08);
   margin: 10px 0;
+}
+
+.sheet__empty {
+  padding: 14px;
+  opacity: 0.8;
 }
 
 /* 最近カテゴリ：チップ表示 */
@@ -301,215 +619,32 @@ textarea:focus {
   text-align: left;
 }
 
-.chip__icon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-}
-
-.chip__icon,
-.item__icon {
-  background: rgba(0,0,0,0.05);
-}
-
-/* すべて：リスト表示をアイコン付きに */
+/* すべて：アイコン付きリスト */
 .sheet__item {
   display: grid;
   grid-template-columns: 36px 1fr;
   gap: 10px;
   align-items: center;
+  width: 100%;
+  text-align: left;
+  border-radius: 14px;
+  min-height: 48px;
+  margin-bottom: 10px;
+  font-weight: 900;
 }
 
+.chip__icon,
 .item__icon {
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
   border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .sheet__item.is-active,
 .sheet__chip.is-active {
-  border-color: color-mix(in oklab, var(--accent) 60%, rgba(0,0,0,0.12));
-  background: color-mix(in oklab, var(--accent) 12%, rgba(0,0,0,0.02));
-}
-
-/* Add下部カテゴリボタン */
-.add2__catBtn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.catBtn__icon {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.05);
-}
-
-/* ===== dashboard ===== */
-
-.dashboard {
-  max-width: 900px;
-  display: grid;
-  gap: 20px;
-}
-
-/* サマリー */
-
-.dashboardCards {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 16px;
-}
-
-.statCard {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 16px;
-
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-
-  display: grid;
-  gap: 6px;
-}
-
-.statCard div:first-child {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.statCard div:last-child {
-  font-size: 22px;
-  font-weight: 800;
-}
-
-/* グラフカード */
-
-.dashboardCard {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 16px;
-
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-
-  min-height: 280px;
-}
-
-/* スマホ */
-
-@media (max-width:768px){
-
-.dashboardCards{
-  grid-template-columns:1fr;
-}
-
-}
-
-/* ===== White theme cards / separators ===== */
-
-.panelCard {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.panelTitle {
-  font-weight: 900;
-  margin-bottom: 10px;
-}
-
-.panelSub {
-  color: #6b7280;
-  font-size: 13px;
-}
-
-/* リストの区切り */
-.listCard {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.listRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  padding: 12px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.listRow:first-child {
-  border-top: 0;
-}
-
-.listLeft {
-  display: grid;
-  gap: 4px;
-}
-
-.listPrimary {
-  font-weight: 800;
-}
-
-.listMeta {
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.listRight {
-  text-align: right;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-/* ===== Button colors ===== */
-
-.btnDanger {
-  background: #ef4444;
-  border: 1px solid #ef4444;
-  color: white;
-}
-
-.btnDanger:hover {
-  background: #dc2626;
-}
-
-.btnSuccess {
-  background: #22c55e;
-  border: 1px solid #22c55e;
-  color: white;
-}
-
-.btnSuccess:hover {
-  background: #16a34a;
-}
-
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modalCard {
-  background: white;
-  border-radius: 14px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  width: 320px;
+  border-color: color-mix(in oklab, var(--accent) 60%, rgba(0, 0, 0, 0.12));
+  background: color-mix(in oklab, var(--accent) 12%, rgba(0, 0, 0, 0.02));
 }

@@ -24,19 +24,6 @@ const COLORS = [
   "#38bdf8",
 ];
 
-// ✅ 白テーマ向けの“見える線”カード
-const cardStyle = {
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: 12,
-  background: "#ffffff",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-};
-
-// ✅ 文字色（opacity頼みをやめる）
-const mutedText = { color: "#6b7280" };
-
-// ✅ Tooltip（白テーマで読みやすい）
 function YenTooltip({ active, payload }) {
   if (!active || !payload || payload.length === 0) return null;
   const p = payload[0];
@@ -57,7 +44,7 @@ function YenTooltip({ active, payload }) {
     >
       <div style={{ fontWeight: 900, marginBottom: 4 }}>{name}</div>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <span style={mutedText}>金額</span>
+        <span className="muted">金額</span>
         <span style={{ fontWeight: 900 }}>{value.toLocaleString()}円</span>
       </div>
     </div>
@@ -71,12 +58,10 @@ export default function DashboardPage() {
 
   const [applyMsg, setApplyMsg] = useState("");
 
-  // 今月の取引だけ抽出
   const filtered = useMemo(() => {
     return transactions.filter((t) => toMonth(t.date) === month);
   }, [transactions, month]);
 
-  // サマリー計算
   const summary = useMemo(() => {
     const income = filtered
       .filter((t) => t.type === "income")
@@ -86,14 +71,9 @@ export default function DashboardPage() {
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
 
-    return {
-      income,
-      expense,
-      balance: income - expense,
-    };
+    return { income, expense, balance: income - expense };
   }, [filtered]);
 
-  // 支出カテゴリ集計
   const byCategory = useMemo(() => {
     const map = new Map();
     for (const t of filtered) {
@@ -105,7 +85,6 @@ export default function DashboardPage() {
       .sort((a, b) => b.value - a.value);
   }, [filtered]);
 
-  // 定期取引を今月に反映
   const applyRecurringForThisMonth = () => {
     const monthKey = month;
 
@@ -140,54 +119,32 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{ maxWidth: 900 }}>
+    <div className="dashboard">
       <h1>ダッシュボード</h1>
-      <p style={mutedText}>表示月：{month}</p>
+      <p className="muted">表示月：{month}</p>
 
       {/* サマリーカード */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 12,
-          marginTop: 12,
-          marginBottom: 16,
-        }}
-      >
+      <div className="dashboardCards">
         <Card title="収入" value={`${summary.income.toLocaleString()}円`} />
         <Card title="支出" value={`${summary.expense.toLocaleString()}円`} />
         <Card title="収支" value={`${summary.balance.toLocaleString()}円`} />
       </div>
 
       {/* 定期取引反映ボタン */}
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "center",
-          marginBottom: 16,
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="dashboard__actions">
         <button onClick={applyRecurringForThisMonth}>今月の定期取引を反映</button>
-        <span style={{ ...mutedText, fontSize: 13 }}>{applyMsg}</span>
+        <span className="panelSub">{applyMsg}</span>
       </div>
 
       {/* 円グラフ & ランキング */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.2fr 1fr",
-          gap: 16,
-        }}
-      >
-        <div style={{ ...cardStyle, minHeight: 280 }}>
+      <div className="dashboardCharts">
+        <div className="dashboardCard">
           <div style={{ fontWeight: 800, marginBottom: 8 }}>
             支出カテゴリ内訳（今月）
           </div>
 
           {byCategory.length === 0 ? (
-            <p style={mutedText}>今月の支出がありません</p>
+            <p className="muted">今月の支出がありません</p>
           ) : (
             <div style={{ width: "100%", height: 240 }}>
               <ResponsiveContainer>
@@ -200,8 +157,6 @@ export default function DashboardPage() {
                       />
                     ))}
                   </Pie>
-
-                  {/* ✅ Tooltipを白テーマ向けに */}
                   <Tooltip content={<YenTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
@@ -209,13 +164,13 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div style={{ ...cardStyle, minHeight: 280 }}>
+        <div className="dashboardCard">
           <div style={{ fontWeight: 800, marginBottom: 8 }}>
             支出カテゴリTop
           </div>
 
           {byCategory.length === 0 ? (
-            <p style={mutedText}>データがありません</p>
+            <p className="muted">データがありません</p>
           ) : (
             <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
               {byCategory.slice(0, 8).map((c) => (
@@ -237,16 +192,8 @@ export default function DashboardPage() {
 
 function Card({ title, value }) {
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        padding: 12,
-        background: "#ffffff",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-      }}
-    >
-      <div style={{ color: "#6b7280", fontSize: 13 }}>{title}</div>
+    <div className="panelCard">
+      <div className="panelSub">{title}</div>
       <div style={{ fontWeight: 900, fontSize: 18 }}>{value}</div>
     </div>
   );
