@@ -72,7 +72,7 @@ export function TransactionsProvider({ children }) {
       type: patch.type,
       category: patch.category,
       amount: patch.amount,
-      memo: patch.memo ?? patch.note ?? "",
+      note: patch.memo ?? patch.note ?? "",
     };
     const { data, error } = await supabase
       .from("transactions")
