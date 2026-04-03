@@ -25,10 +25,19 @@ export function TransactionsProvider({ children }) {
       });
   }, [user]);
 
+  const toRow = (tx) => ({
+    user_id: user.id,
+    date: tx.date,
+    type: tx.type,
+    category: tx.category,
+    amount: tx.amount,
+    memo: tx.memo ?? tx.note ?? "",
+  });
+
   const addTransaction = async (tx) => {
     const { data, error } = await supabase
       .from("transactions")
-      .insert([{ ...tx, user_id: user.id }])
+      .insert([toRow(tx)])
       .select()
       .single();
 
@@ -37,7 +46,7 @@ export function TransactionsProvider({ children }) {
   };
 
   const addTransactions = async (txs) => {
-    const rows = txs.map((tx) => ({ ...tx, user_id: user.id }));
+    const rows = txs.map(toRow);
     const { data, error } = await supabase
       .from("transactions")
       .insert(rows)
@@ -58,9 +67,16 @@ export function TransactionsProvider({ children }) {
   };
 
   const updateTransaction = async (id, patch) => {
+    const clean = {
+      date: patch.date,
+      type: patch.type,
+      category: patch.category,
+      amount: patch.amount,
+      memo: patch.memo ?? patch.note ?? "",
+    };
     const { data, error } = await supabase
       .from("transactions")
-      .update({ ...patch, updated_at: new Date().toISOString() })
+      .update(clean)
       .eq("id", id)
       .select()
       .single();
