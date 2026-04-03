@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell } from "recharts";
-import { useTransactions } from "../transactions/hooks/useTransactions";
+import { useTransactions } from "../transactions/TransactionsContext";
 import { useRecurring } from "../settings/hooks/useRecurring";
 
 function thisMonth() {

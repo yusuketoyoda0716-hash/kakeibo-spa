@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { Home, List, PlusCircle, Settings } from "lucide-react";
 import { useAuth } from "../features/auth/AuthContext";
+import { TransactionsProvider } from "../features/transactions/TransactionsContext";
 import "./layout.css";
 
 const navItems = [
@@ -46,7 +47,9 @@ export default function AppLayout() {
 
       {/* メイン */}
       <main className="main">
-        <Outlet />
+        <TransactionsProvider>
+          <Outlet />
+        </TransactionsProvider>
       </main>
 
       {/* スマホ: 下タブ（常に表示） */}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useTransactions } from "./hooks/useTransactions";
+import { useTransactions } from "./TransactionsContext";
 import { useCategories } from "../settings/hooks/useCategories";
 import { useLocalStorage } from "../../shared/hooks/useLocalStorage";
 
