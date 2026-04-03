@@ -26,6 +26,7 @@ export function TransactionsProvider({ children }) {
   }, [user]);
 
   const toRow = (tx) => ({
+    id: tx.id ?? crypto.randomUUID(),
     user_id: user.id,
     date: tx.date,
     type: tx.type,
