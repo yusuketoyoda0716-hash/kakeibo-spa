@@ -45,6 +45,16 @@
   color: var(--text);
 }
 
+/* サイドバー下部（ユーザー情報 + ログアウト） */
+.sidebarFooter {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  display: grid;
+  gap: 8px;
+}
+
 /* メインコンテンツ */
 .main {
   padding: 20px;

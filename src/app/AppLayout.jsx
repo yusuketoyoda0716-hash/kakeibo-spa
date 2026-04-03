@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { Home, List, PlusCircle, Settings } from "lucide-react";
+import { useAuth } from "../features/auth/AuthContext";
 import "./layout.css";
 
 const navItems = [
@@ -10,6 +11,8 @@ const navItems = [
 ];
 
 export default function AppLayout() {
+  const { user, signOut } = useAuth();
+
   return (
     <div className="layout">
       {/* PC: 左サイド */}
@@ -33,6 +36,12 @@ export default function AppLayout() {
             );
           })}
         </nav>
+
+        {/* ログインユーザー情報 + ログアウト */}
+        <div className="sidebarFooter">
+          <div className="panelSub">{user?.email}</div>
+          <button className="btnSmall" onClick={signOut}>ログアウト</button>
+        </div>
       </aside>
 
       {/* メイン */}

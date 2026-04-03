@@ -396,6 +396,47 @@ textarea:focus {
 }
 
 /* =========================================
+   Login
+========================================= */
+
+.loginPage {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 20px;
+}
+
+.loginCard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  gap: 16px;
+}
+
+.loginTitle {
+  font-size: 28px;
+  font-weight: 900;
+  margin: 0;
+}
+
+.loginGoogleBtn {
+  min-height: 48px;
+  border-radius: 999px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-size: 16px;
+}
+
+/* =========================================
    AddPage - Keypad UI
 ========================================= */
 
