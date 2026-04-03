@@ -31,7 +31,7 @@ export function TransactionsProvider({ children }) {
     type: tx.type,
     category: tx.category,
     amount: tx.amount,
-    memo: tx.memo ?? tx.note ?? "",
+    note: tx.memo ?? tx.note ?? "",
   });
 
   const addTransaction = async (tx) => {
