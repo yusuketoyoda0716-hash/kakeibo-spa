@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useCategories } from "./hooks/useCategories";
 import { useRecurring } from "./hooks/useRecurring";
+import { useAuth } from "../auth/AuthContext";
 
 export default function SettingsPage() {
+  const { user, signOut } = useAuth();
   const { categories, addCategory, removeCategory } = useCategories();
   const [name, setName] = useState("");
 
@@ -121,6 +123,13 @@ export default function SettingsPage() {
             </ul>
           )}
         </div>
+      </section>
+
+      {/* アカウント */}
+      <section className="panelCard settings__section">
+        <h2 style={{ marginTop: 0 }}>アカウント</h2>
+        <p className="panelSub">{user?.email}</p>
+        <button onClick={signOut}>ログアウト</button>
       </section>
     </div>
   );
