@@ -52,7 +52,7 @@ export default function AppLayout() {
         </TransactionsProvider>
       </main>
 
-      {/* スマホ: 下タブ（常に表示） */}
+      {/* スマホ: 下タブ（768px以下のときだけ表示） */}
       <nav className="bottomNav">
         {navItems.map((item) => {
           const Icon = item.icon;

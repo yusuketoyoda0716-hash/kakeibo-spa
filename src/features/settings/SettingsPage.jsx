@@ -65,7 +65,7 @@ export default function SettingsPage() {
         )}
 
         <p className="panelSub" style={{ marginTop: 12 }}>
-          ※ 取引データとは別でブラウザに保存されます
+          ※ カテゴリはアカウントに保存され、どの端末からでも使えます
         </p>
       </section>
 
