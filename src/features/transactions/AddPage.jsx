@@ -1,144 +1,84 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { Delete, X } from "lucide-react";
 import { useTransactions } from "./TransactionsContext";
 import { useCategories } from "../settings/hooks/useCategories";
 import { useLocalStorage } from "../../shared/hooks/useLocalStorage";
 import { today } from "../../lib/dates";
+import { yen } from "../../shared/format";
+import CategoryIcon from "../../shared/CategoryIcon";
 
-function formatJPY(n) {
-  try {
-    return new Intl.NumberFormat("ja-JP").format(n || 0);
-  } catch {
-    return String(n || 0);
-  }
-}
-
-function catIcon(name) {
-  const n = String(name || "");
-  if (n.includes("食")) return "🍚";
-  if (n.includes("日") || n.includes("消耗")) return "🧻";
-  if (n.includes("交") || n.includes("電車") || n.includes("バス")) return "🚃";
-  if (n.includes("家") || n.includes("住")) return "🏠";
-  if (n.includes("光") || n.includes("水") || n.includes("ガス")) return "💡";
-  if (n.includes("通") || n.includes("ネット")) return "📶";
-  if (n.includes("娯") || n.includes("遊")) return "🎮";
-  if (n.includes("医") || n.includes("薬")) return "🏥";
-  if (n.includes("美") || n.includes("服")) return "🧴";
-  return "🏷️";
-}
+const KEYS = ["7", "8", "9", "4", "5", "6", "1", "2", "3", "00", "0", "back"];
+const MAX_DIGITS = 9; // 999,999,999円まで
 
 function AmountPad({ value, onChange }) {
-  const push = (ch) => {
-    if (ch === "C") return onChange("");
-    if (ch === "⌫") return onChange(value.slice(0, -1));
-    if (!/^\d+$/.test(ch)) return;
-
-    const next = (value + ch).replace(/^0+(?=\d)/, "0");
+  const press = (key) => {
+    if (key === "back") return onChange(value.slice(0, -1));
+    const next = (value + key).replace(/^0+/, "");
+    if (next.length > MAX_DIGITS) return;
     onChange(next);
   };
 
-  const keys = [
-    ["7", "8", "9"],
-    ["4", "5", "6"],
-    ["1", "2", "3"],
-    ["00", "0", "⌫"],
-  ];
-
   return (
     <div className="pad">
-      {keys.map((row, i) => (
-        <div className="pad__row" key={i}>
-          {row.map((k) => (
-            <button
-              key={k}
-              type="button"
-              className="pad__key"
-              onClick={() => push(k)}
-            >
-              {k}
-            </button>
-          ))}
-        </div>
-      ))}
-      <button type="button" className="pad__clear" onClick={() => push("C")}>
-        クリア
-      </button>
+      {KEYS.map((k) =>
+        k === "back" ? (
+          <button key={k} type="button" className="pad__key pad__key--sub" onClick={() => press(k)} aria-label="1文字消す">
+            <Delete size={22} aria-hidden="true" />
+          </button>
+        ) : (
+          <button key={k} type="button" className="pad__key" onClick={() => press(k)}>
+            {k}
+          </button>
+        )
+      )}
     </div>
   );
 }
 
-function CategorySheet({
-  open,
-  categories,
-  recentCats,
-  selected,
-  onSelect,
-  onClose,
-}) {
-  if (!open) return null;
+function CategorySheet({ categories, recent, selected, onSelect, onClose }) {
+  const recentShown = recent.filter((c) => categories.includes(c));
 
-  const recent = (recentCats || []).filter((c) => categories.includes(c));
+  const chip = (c) => (
+    <button
+      key={c}
+      type="button"
+      className="catChip"
+      aria-pressed={c === selected}
+      onClick={() => {
+        onSelect(c);
+        onClose();
+      }}
+    >
+      <CategoryIcon name={c} size={20} />
+      {c}
+    </button>
+  );
 
   return (
-    <div className="sheet" role="dialog" aria-modal="true">
-      <div className="sheet__backdrop" onClick={onClose} />
-      <div className="sheet__panel">
-        <div className="sheet__header">
-          <div className="sheet__title">カテゴリ選択</div>
-          <button className="sheet__close" type="button" onClick={onClose}>
-            ✕
+    <div className="bottomSheet">
+      <div className="bottomSheet__backdrop" onClick={onClose} />
+      <div className="bottomSheet__panel" role="dialog" aria-modal="true" aria-labelledby="cat-title">
+        <div className="bottomSheet__head">
+          <h2 id="cat-title">カテゴリを選ぶ</h2>
+          <button type="button" className="iconBtn" onClick={onClose} aria-label="閉じる">
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="sheet__list">
-          {categories.length === 0 ? (
-            <div className="sheet__empty">
-              カテゴリがありません（設定で追加してください）
-            </div>
-          ) : (
-            <>
-              {recent.length > 0 && (
-                <>
-                  <div className="sheet__sectionTitle">最近</div>
-                  <div className="sheet__grid">
-                    {recent.map((c) => (
-                      <button
-                        key={"recent:" + c}
-                        type="button"
-                        className={`sheet__chip ${
-                          c === selected ? "is-active" : ""
-                        }`}
-                        onClick={() => {
-                          onSelect(c);
-                          onClose();
-                        }}
-                      >
-                        <span className="chip__icon">{catIcon(c)}</span>
-                        <span className="chip__text">{c}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="sheet__divider" />
-                </>
-              )}
-
-              <div className="sheet__sectionTitle">すべて</div>
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`sheet__item ${c === selected ? "is-active" : ""}`}
-                  onClick={() => {
-                    onSelect(c);
-                    onClose();
-                  }}
-                >
-                  <span className="item__icon">{catIcon(c)}</span>
-                  <span className="item__text">{c}</span>
-                </button>
-              ))}
-            </>
-          )}
-        </div>
+        {categories.length === 0 ? (
+          <p className="muted">カテゴリがありません。設定から追加できます。</p>
+        ) : (
+          <>
+            {recentShown.length > 0 && (
+              <>
+                <h3 className="bottomSheet__section">最近使った</h3>
+                <div className="catGrid">{recentShown.map(chip)}</div>
+              </>
+            )}
+            <h3 className="bottomSheet__section">すべて</h3>
+            <div className="catGrid">{categories.map(chip)}</div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -149,115 +89,106 @@ export default function AddPage() {
   const { categories } = useCategories();
 
   const [type, setType] = useState("expense");
-
   const [amountStr, setAmountStr] = useState("");
-  const amount = useMemo(() => Number(amountStr || 0), [amountStr]);
-
   const [date, setDate] = useState(today());
   const [note, setNote] = useState("");
-
+  const [category, setCategory] = useState("食費");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [category, setCategory] = useState(categories[0] ?? "食費");
-
+  const [done, setDone] = useState("");
   const [recentCats, setRecentCats] = useLocalStorage("kakeibo:recentCats", []);
 
+  const amount = Number(amountStr || 0);
+
+  // 選んでいたカテゴリが一覧から消えたら先頭のカテゴリにする
   useEffect(() => {
-    if (categories.length === 0) return;
-    if (!categories.includes(category)) setCategory(categories[0]);
+    if (categories.length === 0 || categories.includes(category)) return;
+    setCategory(categories[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
 
-  const canSubmit = amount > 0 && !!date && !!String(category || "").trim();
+  const canSubmit = amount > 0 && Boolean(date) && Boolean(category.trim());
 
   const onSubmit = () => {
     if (!canSubmit) return;
+    addTransaction({ date, type, category: category.trim(), amount, note: note.trim() });
 
-    addTransaction({
-      date,
-      type,
-      category: String(category).trim(),
-      amount,
-      note: note.trim(),
-    });
-
-    // 最近カテゴリ更新
     setRecentCats((prev) => {
-      const p = Array.isArray(prev) ? prev : [];
-      const next = [category, ...p.filter((c) => c !== category)];
-      return next.slice(0, 8);
+      const list = Array.isArray(prev) ? prev : [];
+      return [category, ...list.filter((c) => c !== category)].slice(0, 6);
     });
 
+    setDone(`${category} ¥${yen(amount)}（${type === "income" ? "収入" : "支出"}）を記録しました`);
     setAmountStr("");
     setNote("");
   };
 
   return (
-    <div className="add2">
-      <div className="add2__top">
-        <button
-          type="button"
-          className={`add2__segBtn ${type === "expense" ? "is-on" : ""}`}
-          onClick={() => setType("expense")}
-        >
-          支出
-        </button>
-        <button
-          type="button"
-          className={`add2__segBtn ${type === "income" ? "is-on" : ""}`}
-          onClick={() => setType("income")}
-        >
-          収入
-        </button>
+    <>
+      <div className="pageHead">
+        <h1>記録する</h1>
       </div>
 
-      <div className="add2__amount">
-        <div className="add2__currency">¥</div>
-        <div className="add2__value">{formatJPY(amount)}</div>
+      <div className="sheet slip">
+        <div className="slip__body">
+          <div className="segmented" role="group" aria-label="種別">
+            <button type="button" aria-pressed={type === "expense"} onClick={() => setType("expense")}>
+              支出
+            </button>
+            <button type="button" aria-pressed={type === "income"} onClick={() => setType("income")}>
+              収入
+            </button>
+          </div>
+
+          <div className="slip__amount" aria-live="polite">
+            <span className="slip__yen">¥</span>
+            <span className={`slip__value${amount ? "" : " is-empty"}`}>{yen(amount)}</span>
+          </div>
+
+          <AmountPad
+            value={amountStr}
+            onChange={(v) => {
+              setAmountStr(v);
+              setDone("");
+            }}
+          />
+
+          <div className="slip__meta">
+            <label className="field">
+              <span className="field__label">日付</span>
+              <input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} />
+            </label>
+            <label className="field">
+              <span className="field__label">メモ（任意）</span>
+              <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="例：ランチ" />
+            </label>
+          </div>
+
+          <div className="slip__actions">
+            <button type="button" className="catBtn" onClick={() => setSheetOpen(true)}>
+              <CategoryIcon name={category} size={22} />
+              <span>
+                <small>カテゴリ</small>
+                {category}
+              </span>
+            </button>
+            <button type="button" className="btn btn--primary" disabled={!canSubmit} onClick={onSubmit}>
+              記録する
+            </button>
+          </div>
+
+          <p className="slip__done" role="status">{done}</p>
+        </div>
       </div>
 
-      <AmountPad value={amountStr} onChange={setAmountStr} />
-
-      <div className="add2__meta">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+      {sheetOpen && (
+        <CategorySheet
+          categories={categories}
+          recent={recentCats}
+          selected={category}
+          onSelect={setCategory}
+          onClose={() => setSheetOpen(false)}
         />
-        <input
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="メモ（任意）"
-        />
-      </div>
-
-      <div className="add2__bottom">
-        <button
-          type="button"
-          className="add2__catBtn"
-          onClick={() => setSheetOpen(true)}
-        >
-          <span className="catBtn__icon">{catIcon(category)}</span>
-          <span className="catBtn__text">{category}</span>
-        </button>
-
-        <button
-          type="button"
-          className="add2__okBtn"
-          disabled={!canSubmit}
-          onClick={onSubmit}
-        >
-          OK
-        </button>
-      </div>
-
-      <CategorySheet
-        open={sheetOpen}
-        categories={categories}
-        recentCats={recentCats}
-        selected={category}
-        onSelect={setCategory}
-        onClose={() => setSheetOpen(false)}
-      />
-    </div>
+      )}
+    </>
   );
 }

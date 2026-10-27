@@ -13,30 +13,37 @@ export default function LoginPage() {
       // ポップアップを閉じただけのときはエラーを出さない
       if (e?.code === "auth/popup-closed-by-user" || e?.code === "auth/cancelled-popup-request") return;
       console.error(e);
-      setError("ログインに失敗しました。時間をおいてもう一度お試しください。");
+      setError("ログインできませんでした。時間をおいてもう一度お試しください。");
     }
   };
 
   return (
-    <div className="loginPage">
-      <div className="loginCard">
-        <h1 className="loginTitle">家計簿</h1>
-        <p className="muted">ログインしてデータを保存しましょう</p>
+    <div className="login">
+      {/* 通帳の表紙 */}
+      <div className="cover">
+        <h1 className="cover__title">家計簿</h1>
+        <div className="cover__rule" />
+        <p className="cover__lead">収入と支出を記録して、毎月の残高を確かめられます。</p>
 
-        <button className="loginGoogleBtn" onClick={onGoogle} disabled={!canUseGoogle}>
-          Googleでログイン
-        </button>
-        {!canUseGoogle && (
-          <p className="panelSub">Firebase が未設定のため、ゲストモードのみ利用できます</p>
-        )}
-        {error && <p className="loginError">{error}</p>}
+        <div className="cover__actions">
+          <button
+            type="button"
+            className="btn btn--onCover"
+            onClick={onGoogle}
+            disabled={!canUseGoogle}
+          >
+            Googleでログイン
+          </button>
+          {!canUseGoogle && (
+            <p className="cover__note">Firebase が未設定のため、ゲストモードのみ使えます</p>
+          )}
+          {error && <p className="cover__error" role="alert">{error}</p>}
 
-        <div className="loginDivider"><span>または</span></div>
-
-        <button className="loginGuestBtn" onClick={signInAsGuest}>
-          ゲストで試す
-        </button>
-        <p className="panelSub">サンプルデータで全機能を試せます（データは保存されません）</p>
+          <button type="button" className="btn btn--giltOutline" onClick={signInAsGuest}>
+            ゲストで試す
+          </button>
+          <p className="cover__note">サンプルデータで全機能を試せます（保存はされません）</p>
+        </div>
       </div>
     </div>
   );

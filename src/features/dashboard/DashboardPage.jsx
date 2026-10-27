@@ -1,45 +1,29 @@
 import { useMemo, useState } from "react";
-import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell } from "recharts";
+import { Link } from "react-router-dom";
+import { Repeat } from "lucide-react";
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+} from "recharts";
 import { useTransactions } from "../transactions/TransactionsContext";
 import { useRecurring } from "../settings/hooks/useRecurring";
-import { thisMonth, toMonth } from "../../lib/dates";
+import { thisMonth, today, toMonth } from "../../lib/dates";
+import { yen, monthLabel } from "../../shared/format";
+import CategoryIcon from "../../shared/CategoryIcon";
+import LedgerRow from "../transactions/LedgerRow";
 
-const COLORS = [
-  "#4f8cff",
-  "#34d399",
-  "#f59e0b",
-  "#f87171",
-  "#a78bfa",
-  "#22c55e",
-  "#60a5fa",
-  "#fb7185",
-  "#eab308",
-  "#38bdf8",
-];
+const CHART = "#008a74";
+const MAX_BARS = 6;
 
-function YenTooltip({ active, payload }) {
-  if (!active || !payload || payload.length === 0) return null;
-  const p = payload[0];
-  const name = p?.name ?? "";
-  const value = typeof p?.value === "number" ? p.value : Number(p?.value ?? 0);
+// 縦軸の目盛り：1万以上は「◯万」と短く表示
+const compactYen = (v) => (v >= 10000 ? `${v / 10000}万` : yen(v));
 
+function SpendTooltip({ active, payload, month }) {
+  if (!active || !payload?.length) return null;
+  const { day, total } = payload[0].payload;
   return (
-    <div
-      style={{
-        background: "#ffffff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        padding: "10px 12px",
-        boxShadow: "0 6px 16px rgba(0,0,0,0.10)",
-        color: "#111827",
-        minWidth: 140,
-      }}
-    >
-      <div style={{ fontWeight: 900, marginBottom: 4 }}>{name}</div>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <span className="muted">金額</span>
-        <span style={{ fontWeight: 900 }}>{value.toLocaleString()}円</span>
-      </div>
+    <div className="chartTip">
+      <div className="muted">{Number(month.slice(5))}/{day}までの支出</div>
+      <strong>¥{yen(total)}</strong>
     </div>
   );
 }
@@ -48,143 +32,224 @@ export default function DashboardPage() {
   const { transactions, addTransactions } = useTransactions();
   const { recurring } = useRecurring();
   const month = thisMonth();
-
   const [applyMsg, setApplyMsg] = useState("");
 
-  const filtered = useMemo(() => {
-    return transactions.filter((t) => toMonth(t.date) === month);
-  }, [transactions, month]);
+  const monthTx = useMemo(
+    () => transactions.filter((t) => toMonth(t.date) === month),
+    [transactions, month]
+  );
 
   const summary = useMemo(() => {
-    const income = filtered
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const expense = filtered
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
-
+    let income = 0;
+    let expense = 0;
+    for (const t of monthTx) {
+      if (t.type === "income") income += t.amount;
+      else expense += t.amount;
+    }
     return { income, expense, balance: income - expense };
-  }, [filtered]);
+  }, [monthTx]);
 
+  // 今日までの支出の累計（日ごと）
+  const spendSeries = useMemo(() => {
+    const lastDay = Number(today().slice(8));
+    const perDay = Array(lastDay + 1).fill(0);
+    for (const t of monthTx) {
+      if (t.type !== "expense") continue;
+      const d = Number(t.date.slice(8));
+      if (d <= lastDay) perDay[d] += t.amount;
+    }
+    const series = [];
+    for (let d = 1; d <= lastDay; d++) {
+      const prev = series.length ? series[series.length - 1].total : 0;
+      series.push({ day: d, total: prev + perDay[d] });
+    }
+    return series;
+  }, [monthTx]);
+
+  // カテゴリ別の支出（多い順。7位以下は「その他」にまとめる）
   const byCategory = useMemo(() => {
     const map = new Map();
-    for (const t of filtered) {
+    for (const t of monthTx) {
       if (t.type !== "expense") continue;
       map.set(t.category, (map.get(t.category) || 0) + t.amount);
     }
-    return Array.from(map.entries())
+    const rows = [...map.entries()]
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [filtered]);
+    if (rows.length <= MAX_BARS) return rows;
+    const head = rows.slice(0, MAX_BARS - 1);
+    const rest = rows.slice(MAX_BARS - 1).reduce((s, r) => s + r.value, 0);
+    return [...head, { name: "その他", value: rest, isOther: true }];
+  }, [monthTx]);
 
-  const applyRecurringForThisMonth = () => {
-    const monthKey = month;
+  const maxCategory = byCategory[0]?.value || 1;
+  const recent = monthTx.slice(0, 5);
 
-    const appliedIds = new Set(
-      transactions
-        .filter((t) => t.recurringId && t.appliedMonth === monthKey)
-        .map((t) => t.recurringId)
+  const applyRecurring = () => {
+    if (recurring.length === 0) {
+      setApplyMsg("定期取引が未登録です。設定から登録できます。");
+      return;
+    }
+    const applied = new Set(
+      transactions.filter((t) => t.recurringId && t.appliedMonth === month).map((t) => t.recurringId)
     );
-
     const toAdd = recurring
-      .filter((r) => !appliedIds.has(r.id))
+      .filter((r) => !applied.has(r.id))
       .map((r) => ({
-        date: `${monthKey}-01`,
+        date: `${month}-01`,
         type: r.type,
         category: r.category,
         amount: r.amount,
         note: r.note || "",
         recurringId: r.id,
-        appliedMonth: monthKey,
+        appliedMonth: month,
       }));
 
     if (toAdd.length === 0) {
-      setApplyMsg("今月はすでに反映済みです");
+      setApplyMsg("今月分は記録済みです");
       return;
     }
-
     addTransactions(toAdd);
-    setApplyMsg(`今月に ${toAdd.length} 件反映しました`);
+    setApplyMsg(`${toAdd.length}件を1日付で記録しました`);
   };
 
+  const lastDay = spendSeries.length;
+  const xTicks = [1, 8, 15, 22, 29].filter((d) => d <= lastDay);
+
   return (
-    <div className="dashboard">
-      <h1>ダッシュボード</h1>
-      <p className="muted">表示月：{month}</p>
-
-      {/* サマリーカード */}
-      <div className="dashboardCards">
-        <Card title="収入" value={`${summary.income.toLocaleString()}円`} />
-        <Card title="支出" value={`${summary.expense.toLocaleString()}円`} />
-        <Card title="収支" value={`${summary.balance.toLocaleString()}円`} />
+    <>
+      <div className="pageHead">
+        <h1>{monthLabel(month)}</h1>
       </div>
 
-      {/* 定期取引反映ボタン */}
-      <div className="dashboard__actions">
-        <button onClick={applyRecurringForThisMonth}>今月の定期取引を反映</button>
-        <span className="panelSub">{applyMsg}</span>
-      </div>
-
-      {/* 円グラフ & ランキング */}
-      <div className="dashboardCharts">
-        <div className="dashboardCard">
-          <div style={{ fontWeight: 800, marginBottom: 8 }}>
-            支出カテゴリ内訳（今月）
-          </div>
-
-          {byCategory.length === 0 ? (
-            <p className="muted">今月の支出がありません</p>
-          ) : (
-            <div style={{ width: "100%", height: 240 }}>
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={byCategory} dataKey="value" nameKey="name">
-                    {byCategory.map((entry, index) => (
-                      <Cell
-                        key={entry.name}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<YenTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+      <div className="sheet">
+        {/* 残高 */}
+        <div className="balance">
+          <div>
+            <div className="balance__label">今月の残高（収入 − 支出）</div>
+            <div className={`balance__amount${summary.balance < 0 ? " is-negative" : ""}`}>
+              {summary.balance < 0 ? "−" : ""}¥{yen(Math.abs(summary.balance))}
             </div>
-          )}
-        </div>
-
-        <div className="dashboardCard">
-          <div style={{ fontWeight: 800, marginBottom: 8 }}>
-            支出カテゴリTop
+            <div className="balance__flow num">
+              <div><span>収入</span>¥{yen(summary.income)}</div>
+              <div><span>支出</span>¥{yen(summary.expense)}</div>
+            </div>
           </div>
 
-          {byCategory.length === 0 ? (
-            <p className="muted">データがありません</p>
-          ) : (
-            <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
-              {byCategory.slice(0, 8).map((c) => (
-                <li
-                  key={c.name}
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <span>{c.name}</span>
-                  <strong>{c.value.toLocaleString()}円</strong>
-                </li>
-              ))}
-            </ol>
-          )}
+          <div className="balance__actions">
+            <button type="button" className="btn btn--small" onClick={applyRecurring}>
+              <Repeat size={15} aria-hidden="true" />
+              今月の定期取引を記録
+            </button>
+            <span className="muted small" role="status">{applyMsg}</span>
+          </div>
+        </div>
+
+        {/* 支出の推移とカテゴリ別 */}
+        <div className="dashGrid">
+          <section aria-labelledby="spend-trend">
+            <h2 id="spend-trend">支出の累計</h2>
+            {summary.expense === 0 ? (
+              <p className="muted">今月の支出はまだありません</p>
+            ) : (
+              <div className="chartBox">
+                <ResponsiveContainer>
+                  <AreaChart data={spendSeries} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
+                    <CartesianGrid stroke="#dde9e5" vertical={false} />
+                    <XAxis
+                      dataKey="day"
+                      ticks={xTicks}
+                      tickFormatter={(d) => `${d}日`}
+                      padding={{ left: 10, right: 4 }}
+                      tickLine={false}
+                      axisLine={{ stroke: "#b3cbc3" }}
+                      tick={{ fill: "#566966", fontSize: 12 }}
+                    />
+                    <YAxis
+                      tickFormatter={compactYen}
+                      tickLine={false}
+                      axisLine={false}
+                      width={48}
+                      tick={{ fill: "#566966", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      content={<SpendTooltip month={month} />}
+                      cursor={{ stroke: "#b3cbc3", strokeWidth: 1 }}
+                    />
+                    <Area
+                      type="stepAfter"
+                      dataKey="total"
+                      stroke={CHART}
+                      strokeWidth={2}
+                      fill={CHART}
+                      fillOpacity={0.1}
+                      activeDot={{ r: 4, fill: CHART, stroke: "#fafcfb", strokeWidth: 2 }}
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </section>
+
+          <section aria-labelledby="spend-by-cat">
+            <h2 id="spend-by-cat">カテゴリ別の支出</h2>
+            {byCategory.length === 0 ? (
+              <p className="muted">今月の支出はまだありません</p>
+            ) : (
+              <ul className="bars">
+                {byCategory.map((c) => (
+                  <li key={c.name} className="bars__item">
+                    <span className="bars__name">
+                      <CategoryIcon name={c.isOther ? "" : c.name} size={15} />
+                      {c.name}
+                    </span>
+                    <span className="bars__value">
+                      ¥{yen(c.value)}
+                      <small>{Math.round((c.value / summary.expense) * 100)}%</small>
+                    </span>
+                    <div className="bars__track" aria-hidden="true">
+                      <div className="bars__fill" style={{ width: `${(c.value / maxCategory) * 100}%` }} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
       </div>
-    </div>
-  );
-}
 
-function Card({ title, value }) {
-  return (
-    <div className="panelCard">
-      <div className="panelSub">{title}</div>
-      <div style={{ fontWeight: 900, fontSize: 18 }}>{value}</div>
-    </div>
+      {/* 最近の記録 */}
+      <div className="sheet">
+        <div className="sheet__head">
+          <h2>最近の記録</h2>
+        </div>
+        {recent.length === 0 ? (
+          <div className="ledger__empty">
+            今月の記録はまだありません
+            <div>
+              <Link to="/add" className="btn btn--primary">記録する</Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="ledger ledger--compact" role="table" aria-label="最近の記録">
+              <div className="ledger__row ledger__row--head" role="row">
+                <span role="columnheader">日付</span>
+                <span role="columnheader">摘要</span>
+                <span role="columnheader" className="ledger__amt">支出</span>
+                <span role="columnheader" className="ledger__amt">収入</span>
+              </div>
+              {recent.map((t) => (
+                <LedgerRow key={t.id} tx={t} />
+              ))}
+            </div>
+            <div className="dashFoot">
+              <Link to="/transactions" className="btn btn--quiet btn--small">通帳をすべて見る</Link>
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }

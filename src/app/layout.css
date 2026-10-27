@@ -1,107 +1,188 @@
 /* =========================================
-   Layout (AppLayout)
+   レイアウト：PCは左に通帳の表紙のようなサイドバー、スマホは下にタブ
 ========================================= */
 
-.layout {
+.shell {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  min-height: 100vh;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 100dvh;
 }
 
-/* PC サイドバー */
-.sidebar {
-  border-right: 1px solid var(--border);
-  background: var(--panel);
-  padding: 16px;
+.side {
   position: sticky;
   top: 0;
-  height: 100vh;
-}
-
-.brand {
-  font-weight: 800;
-  font-size: 18px;
-  margin-bottom: 16px;
-}
-
-.nav {
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  padding: 28px 16px 20px;
+  color: #dcebe7;
+  background-color: var(--cover);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='24' viewBox='0 0 120 24'%3E%3Cpath d='M0 12 Q15 4 30 12 T60 12 T90 12 T120 12' fill='none' stroke='%23ffffff' stroke-opacity='0.05' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 120px 24px;
 }
 
-.navItem {
+.side__brand {
+  padding: 0 8px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+.side__rule {
+  height: 1px;
+  margin: 14px 8px 22px;
+  background: var(--gilt);
+  opacity: 0.7;
+}
+
+.side__nav {
+  display: grid;
+  gap: 2px;
+}
+
+.side__link {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  color: var(--muted);
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  color: #cfe3dd;
   text-decoration: none;
 }
 
-.navItem.active {
-  background: color-mix(in oklab, var(--accent) 18%, transparent);
-  color: var(--text);
+.side__link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
 }
 
-/* サイドバー下部（ユーザー情報 + ログアウト） */
-.sidebarFooter {
+.side__link.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* 選択中の項目には金色のしおり */
+.side__link.active::before {
+  content: "";
   position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
+  left: -16px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--gilt);
+}
+
+.side__foot {
+  margin-top: auto;
   display: grid;
   gap: 8px;
+  padding: 14px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  color: #b9d3cc;
+  word-break: break-all;
 }
 
-/* メインコンテンツ */
+.side__foot .btn {
+  justify-content: flex-start;
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  color: #dcebe7;
+}
+
+.side__foot .btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .main {
-  padding: 20px;
-  background: var(--bg);
+  min-width: 0;
+  padding: 32px 32px 48px;
 }
 
-/* スマホ：ボトムナビ */
-.bottomNav {
-  display: none; /* PCでは非表示。スマホ幅のときだけ下のメディアクエリで表示 */
-  z-index: 10;
+.main__inner {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* ゲストモードのお知らせ */
+.guestNote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid #e2d3a6;
+  border-radius: var(--radius);
+  background: #f8f1dc;
+  font-size: 13px;
+}
+
+.tabbar {
+  display: none;
 }
 
 @media (max-width: 768px) {
-  .layout {
+  .shell {
     grid-template-columns: 1fr;
-    padding-bottom: 64px;
   }
 
-  .sidebar {
+  .side {
     display: none;
   }
 
-  .bottomNav {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+  .main {
+    padding: 20px 12px calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .guestNote {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tabbar {
     position: fixed;
-    bottom: 0;
     left: 0;
     right: 0;
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    height: 64px;
-    z-index: 10;
+    bottom: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--rule-strong);
+    background: var(--page);
   }
 
-  .bottomItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    color: var(--muted);
-    text-decoration: none;
+  .tabbar__link {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 9px 0 8px;
+    color: var(--ink-soft);
     font-size: 11px;
+    text-decoration: none;
   }
 
-  .bottomItem.active {
-    color: var(--text);
+  .tabbar__link.active {
+    color: var(--cover);
+    font-weight: 700;
+  }
+
+  .tabbar__link.active::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 30%;
+    right: 30%;
+    height: 3px;
+    border-radius: 0 0 2px 2px;
+    background: var(--cover);
   }
 }
