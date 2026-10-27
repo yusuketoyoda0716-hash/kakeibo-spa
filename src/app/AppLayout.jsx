@@ -1,13 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, List, PlusCircle, Settings } from "lucide-react";
+import { BookOpen, PlusCircle, Settings, LayoutDashboard, LogOut } from "lucide-react";
 import { useAuth } from "../features/auth/AuthContext";
 import { TransactionsProvider } from "../features/transactions/TransactionsContext";
 import "./layout.css";
 
 const navItems = [
-  { to: "/dashboard", label: "ホーム", icon: Home },
-  { to: "/transactions", label: "取引", icon: List },
-  { to: "/add", label: "追加", icon: PlusCircle },
+  { to: "/dashboard", label: "ホーム", icon: LayoutDashboard },
+  { to: "/transactions", label: "通帳", icon: BookOpen },
+  { to: "/add", label: "記録する", icon: PlusCircle },
   { to: "/settings", label: "設定", icon: Settings },
 ];
 
@@ -15,64 +15,57 @@ export default function AppLayout() {
   const { user, isGuest, signOut } = useAuth();
 
   return (
-    <div className="layout">
-      {/* PC: 左サイド */}
-      <aside className="sidebar">
-        <div className="brand">家計簿</div>
+    <div className="shell">
+      {/* PC：通帳の表紙のようなサイドバー */}
+      <aside className="side">
+        <div className="side__brand">家計簿</div>
+        <div className="side__rule" />
 
-        <nav className="nav">
+        <nav className="side__nav" aria-label="メニュー">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  "navItem" + (isActive ? " active" : "")
-                }
-              >
-                <Icon size={20} />
+              <NavLink key={item.to} to={item.to} className="side__link">
+                <Icon size={19} strokeWidth={1.75} aria-hidden="true" />
                 <span>{item.label}</span>
               </NavLink>
             );
           })}
         </nav>
 
-        {/* ログインユーザー情報 + ログアウト */}
-        <div className="sidebarFooter">
-          <div className="panelSub">{isGuest ? "ゲストモード" : user?.email}</div>
-          <button className="btnSmall" onClick={signOut}>
+        <div className="side__foot">
+          <span>{isGuest ? "ゲストモード" : user?.email}</span>
+          <button type="button" className="btn btn--small" onClick={signOut}>
+            <LogOut size={16} aria-hidden="true" />
             {isGuest ? "ゲストモードを終了" : "ログアウト"}
           </button>
         </div>
       </aside>
 
-      {/* メイン */}
       <main className="main">
-        {isGuest && (
-          <div className="guestBanner">
-            <span>ゲストモードで表示中です（サンプルデータ・変更は保存されません）</span>
-            <button className="btnSmall" onClick={signOut}>ログイン画面へ</button>
-          </div>
-        )}
-        <TransactionsProvider>
-          <Outlet />
-        </TransactionsProvider>
+        <div className="main__inner">
+          {isGuest && (
+            <div className="guestNote" role="status">
+              <span>ゲストモードで表示しています。サンプルデータのため、変更は保存されません。</span>
+              <button type="button" className="btn btn--quiet btn--small" onClick={signOut}>
+                ログイン画面へ
+              </button>
+            </div>
+          )}
+
+          <TransactionsProvider>
+            <Outlet />
+          </TransactionsProvider>
+        </div>
       </main>
 
-      {/* スマホ: 下タブ（768px以下のときだけ表示） */}
-      <nav className="bottomNav">
+      {/* スマホ：下のタブ（768px以下のときだけ表示） */}
+      <nav className="tabbar" aria-label="メニュー">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                "bottomItem" + (isActive ? " active" : "")
-              }
-            >
-              <Icon size={22} />
+            <NavLink key={item.to} to={item.to} className="tabbar__link">
+              <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
               <span>{item.label}</span>
             </NavLink>
           );
