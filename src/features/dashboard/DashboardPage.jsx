@@ -2,14 +2,7 @@ import { useMemo, useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell } from "recharts";
 import { useTransactions } from "../transactions/TransactionsContext";
 import { useRecurring } from "../settings/hooks/useRecurring";
-
-function thisMonth() {
-  return new Date().toISOString().slice(0, 7);
-}
-
-function toMonth(dateStr) {
-  return String(dateStr || "").slice(0, 7);
-}
+import { thisMonth, toMonth } from "../../lib/dates";
 
 const COLORS = [
   "#4f8cff",
@@ -90,14 +83,13 @@ export default function DashboardPage() {
 
     const appliedIds = new Set(
       transactions
-        .filter((t) => t.recurring_id && t.applied_month === monthKey)
-        .map((t) => t.recurring_id)
+        .filter((t) => t.recurringId && t.appliedMonth === monthKey)
+        .map((t) => t.recurringId)
     );
 
     const toAdd = recurring
       .filter((r) => !appliedIds.has(r.id))
       .map((r) => ({
-        id: crypto.randomUUID(),
         date: `${monthKey}-01`,
         type: r.type,
         category: r.category,

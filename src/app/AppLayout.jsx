@@ -12,7 +12,7 @@ const navItems = [
 ];
 
 export default function AppLayout() {
-  const { user, signOut } = useAuth();
+  const { user, isGuest, signOut } = useAuth();
 
   return (
     <div className="layout">
@@ -40,13 +40,21 @@ export default function AppLayout() {
 
         {/* ログインユーザー情報 + ログアウト */}
         <div className="sidebarFooter">
-          <div className="panelSub">{user?.email}</div>
-          <button className="btnSmall" onClick={signOut}>ログアウト</button>
+          <div className="panelSub">{isGuest ? "ゲストモード" : user?.email}</div>
+          <button className="btnSmall" onClick={signOut}>
+            {isGuest ? "ゲストモードを終了" : "ログアウト"}
+          </button>
         </div>
       </aside>
 
       {/* メイン */}
       <main className="main">
+        {isGuest && (
+          <div className="guestBanner">
+            <span>ゲストモードで表示中です（サンプルデータ・変更は保存されません）</span>
+            <button className="btnSmall" onClick={signOut}>ログイン画面へ</button>
+          </div>
+        )}
         <TransactionsProvider>
           <Outlet />
         </TransactionsProvider>

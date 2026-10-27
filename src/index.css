@@ -689,3 +689,58 @@ textarea:focus {
   border-color: color-mix(in oklab, var(--accent) 60%, rgba(0, 0, 0, 0.12));
   background: color-mix(in oklab, var(--accent) 12%, rgba(0, 0, 0, 0.02));
 }
+
+/* =========================================
+   Login - ゲストモード
+========================================= */
+
+.loginDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.loginDivider::before,
+.loginDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.loginGuestBtn {
+  min-height: 48px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.loginGoogleBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loginError {
+  margin: 0;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+/* ゲストモード中に画面上部に出すお知らせ */
+.guestBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--accent) 10%, var(--panel));
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  font-size: 13px;
+}

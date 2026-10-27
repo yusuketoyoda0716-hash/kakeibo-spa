@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// 家計簿SPA の Firestore セキュリティルール
+// 自分の uid 配下（users/{uid}/...）のデータだけ読み書きできる
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // 取引：種別と金額の形をチェックしてから保存を許可する
+    function isValidTransaction(d) {
+      return d.type in ['expense', 'income']
+        && d.amount is number && d.amount > 0
+        && d.date is string && d.date.size() == 10
+        && d.category is string && d.category.size() > 0;
+    }
+
+    match /users/{uid}/transactions/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidTransaction(request.resource.data);
+    }
+
+    match /users/{uid}/categories/{id} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /users/{uid}/recurring/{id} {
+      allow read, write: if isOwner(uid);
+    }
+  }
+}

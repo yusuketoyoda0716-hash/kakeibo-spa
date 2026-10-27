@@ -1,14 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTransactions } from "./TransactionsContext";
 import { useCategories } from "../settings/hooks/useCategories";
-
-function toMonth(dateStr) {
-  return String(dateStr || "").slice(0, 7);
-}
-
-function thisMonth() {
-  return new Date().toISOString().slice(0, 7);
-}
+import { thisMonth, toMonth } from "../../lib/dates";
 
 export default function TransactionsPage() {
   const { transactions, deleteTransaction, updateTransaction } = useTransactions();

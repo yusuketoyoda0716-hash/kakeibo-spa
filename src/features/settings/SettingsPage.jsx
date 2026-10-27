@@ -4,7 +4,7 @@ import { useRecurring } from "./hooks/useRecurring";
 import { useAuth } from "../auth/AuthContext";
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, isGuest, signOut } = useAuth();
   const { categories, addCategory, removeCategory } = useCategories();
   const [name, setName] = useState("");
 
@@ -128,8 +128,17 @@ export default function SettingsPage() {
       {/* アカウント */}
       <section className="panelCard settings__section">
         <h2 style={{ marginTop: 0 }}>アカウント</h2>
-        <p className="panelSub">{user?.email}</p>
-        <button onClick={signOut}>ログアウト</button>
+        {isGuest ? (
+          <>
+            <p className="panelSub">ゲストモード（データは保存されません）</p>
+            <button onClick={signOut}>ゲストモードを終了</button>
+          </>
+        ) : (
+          <>
+            <p className="panelSub">{user?.email}</p>
+            <button onClick={signOut}>ログアウト</button>
+          </>
+        )}
       </section>
     </div>
   );
