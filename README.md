@@ -162,15 +162,15 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ```sql
 create table transactions (
-  id uuid primary key default gen_random_uuid(),
+  id text primary key,            -- アプリ側で crypto.randomUUID() を生成して保存
   user_id uuid references auth.users not null,
-  date date not null,
+  date text not null,             -- 例：2026-10-27
   type text not null check (type in ('expense', 'income')),
   category text not null,
-  amount numeric not null,
+  amount integer not null,        -- 円（整数）
   note text,
-  recurring_id uuid,      -- 定期取引から反映した場合のテンプレID
-  applied_month text,     -- 反映した月（例：2026-10）
+  recurring_id text,              -- 定期取引から反映した場合のテンプレID
+  applied_month text,             -- 反映した月（例：2026-10）
   created_at timestamptz default now(),
   -- 同じテンプレを同じ月に二重反映しないための制約
   unique (user_id, recurring_id, applied_month)
