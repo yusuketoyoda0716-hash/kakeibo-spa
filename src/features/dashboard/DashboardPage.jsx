@@ -90,8 +90,8 @@ export default function DashboardPage() {
 
     const appliedIds = new Set(
       transactions
-        .filter((t) => t.source === "recurring" && t.appliedMonth === monthKey)
-        .map((t) => t.recurringId)
+        .filter((t) => t.recurring_id && t.applied_month === monthKey)
+        .map((t) => t.recurring_id)
     );
 
     const toAdd = recurring
@@ -103,8 +103,6 @@ export default function DashboardPage() {
         category: r.category,
         amount: r.amount,
         note: r.note || "",
-        createdAt: Date.now(),
-        source: "recurring",
         recurringId: r.id,
         appliedMonth: monthKey,
       }));

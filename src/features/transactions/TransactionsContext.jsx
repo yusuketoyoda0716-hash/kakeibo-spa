@@ -33,6 +33,11 @@ export function TransactionsProvider({ children }) {
     category: tx.category,
     amount: tx.amount,
     note: tx.memo ?? tx.note ?? "",
+    // 定期取引から反映した取引だけ、どのテンプレを何月分に反映したかを保存する
+    // （二重反映の判定に使う）
+    ...(tx.recurringId
+      ? { recurring_id: tx.recurringId, applied_month: tx.appliedMonth }
+      : {}),
   });
 
   const addTransaction = async (tx) => {
