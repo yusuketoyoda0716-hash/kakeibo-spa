@@ -1,75 +1,54 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
 import { useAuth } from "../auth/AuthContext";
 
+// 取引データはダッシュボード・一覧・追加の3画面で共有するので Context にまとめる
+// → 追加した取引がすぐ他の画面にも反映される
 const TransactionsContext = createContext(null);
 
+const byDateDesc = (a, b) => b.date.localeCompare(a.date);
+
 export function TransactionsProvider({ children }) {
-  const { user } = useAuth();
+  const { repo } = useAuth();
   const [transactions, setTransactions] = useState([]);
 
+  // 保存先（repo）が変わるたびに読み込み直す
   useEffect(() => {
-    if (!user) {
-      setTransactions([]);
-      return;
-    }
+    if (!repo) return;
+    let cancelled = false;
+    repo
+      .listTransactions()
+      .then((rows) => { if (!cancelled) setTransactions(rows); })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  }, [repo]);
 
-    supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("date", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) { console.error(error); return; }
-        setTransactions(data ?? []);
-      });
-  }, [user]);
-
-  const toRow = (tx) => ({
-    id: tx.id ?? crypto.randomUUID(),
-    user_id: user.id,
+  const normalize = (tx) => ({
     date: tx.date,
     type: tx.type,
     category: tx.category,
     amount: tx.amount,
     note: tx.memo ?? tx.note ?? "",
-    // 定期取引から反映した取引だけ、どのテンプレを何月分に反映したかを保存する
-    // （二重反映の判定に使う）
-    ...(tx.recurringId
-      ? { recurring_id: tx.recurringId, applied_month: tx.appliedMonth }
-      : {}),
+    recurringId: tx.recurringId ?? null,
+    appliedMonth: tx.appliedMonth ?? null,
   });
 
-  const addTransaction = async (tx) => {
-    const { data, error } = await supabase
-      .from("transactions")
-      .insert([toRow(tx)])
-      .select()
-      .single();
-
-    if (error) { console.error(error); return; }
-    setTransactions((prev) => [data, ...prev]);
-  };
-
   const addTransactions = async (txs) => {
-    const rows = txs.map(toRow);
-    const { data, error } = await supabase
-      .from("transactions")
-      .insert(rows)
-      .select();
-
-    if (error) { console.error(error); return; }
-    setTransactions((prev) => [...(data ?? []), ...prev]);
+    try {
+      const saved = await repo.addTransactions(txs.map(normalize));
+      const ids = new Set(saved.map((t) => t.id));
+      setTransactions((prev) =>
+        [...saved, ...prev.filter((t) => !ids.has(t.id))].sort(byDateDesc)
+      );
+    } catch (e) { console.error(e); }
   };
+
+  const addTransaction = (tx) => addTransactions([tx]);
 
   const deleteTransaction = async (id) => {
-    const { error } = await supabase
-      .from("transactions")
-      .delete()
-      .eq("id", id);
-
-    if (error) { console.error(error); return; }
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await repo.deleteTransaction(id);
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    } catch (e) { console.error(e); }
   };
 
   const updateTransaction = async (id, patch) => {
@@ -80,15 +59,12 @@ export function TransactionsProvider({ children }) {
       amount: patch.amount,
       note: patch.memo ?? patch.note ?? "",
     };
-    const { data, error } = await supabase
-      .from("transactions")
-      .update(clean)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) { console.error(error); return; }
-    setTransactions((prev) => prev.map((t) => (t.id === id ? data : t)));
+    try {
+      await repo.updateTransaction(id, clean);
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...clean } : t)).sort(byDateDesc)
+      );
+    } catch (e) { console.error(e); }
   };
 
   return (
@@ -100,6 +76,7 @@ export function TransactionsProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTransactions() {
   return useContext(TransactionsContext);
 }

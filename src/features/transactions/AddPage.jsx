@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTransactions } from "./TransactionsContext";
 import { useCategories } from "../settings/hooks/useCategories";
 import { useLocalStorage } from "../../shared/hooks/useLocalStorage";
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+import { today } from "../../lib/dates";
 
 function formatJPY(n) {
   try {
@@ -176,13 +173,11 @@ export default function AddPage() {
     if (!canSubmit) return;
 
     addTransaction({
-      id: crypto.randomUUID(),
       date,
       type,
       category: String(category).trim(),
       amount,
       note: note.trim(),
-      createdAt: Date.now(),
     });
 
     // 最近カテゴリ更新

@@ -1,20 +1,28 @@
 # 家計簿SPA
 
-React + Supabase で作成した家計簿アプリです。
+React + Firebase で作成した家計簿アプリです。
 スマホファーストのUIで、Googleアカウントでログインしてデータをクラウド保存できます。
+ログインせずに **「ゲストで試す」** からサンプルデータで全機能を試すこともできます。
 
-**デモ：** [kakeibo-spa.vercel.app](https://kakeibo-spa.vercel.app)
+**デモ：** [kakeibo-spa.vercel.app](https://kakeibo-spa.vercel.app)（ログイン画面の「ゲストで試す」からすぐ触れます）
 
 <p>
   <img src="docs/screenshots/pc-dashboard.png" alt="ダッシュボード（PC）" width="64%">
   <img src="docs/screenshots/sp-add.png" alt="取引追加（スマホ）" width="23%">
 </p>
 
-> スクリーンショットはサンプルデータで撮影しています。
+> スクリーンショットはゲストモード（サンプルデータ）で撮影しています。
 
 ---
 
 ## 画面
+
+### ログイン
+Googleでログインするか、ゲストモードで試せます。
+
+| PC | スマホ |
+|---|---|
+| <img src="docs/screenshots/pc-login.png" alt="ログイン画面（PC）" width="520"> | <img src="docs/screenshots/sp-login.png" alt="ログイン画面（スマホ）" width="220"> |
 
 ### ダッシュボード
 今月の収入・支出・収支と、支出カテゴリの円グラフ／ランキングを表示します。
@@ -37,9 +45,6 @@ React + Supabase で作成した家計簿アプリです。
 |---|---|
 | <img src="docs/screenshots/pc-transactions.png" alt="取引一覧（PC）" width="520"> | <img src="docs/screenshots/sp-transactions.png" alt="取引一覧（スマホ）" width="220"> |
 
-### ログイン
-<img src="docs/screenshots/pc-login.png" alt="ログイン画面" width="520">
-
 ---
 
 ## 使用技術
@@ -50,8 +55,8 @@ React + Supabase で作成した家計簿アプリです。
 | スタイル | プレーンCSS（CSS変数によるテーマ管理・メディアクエリ） |
 | グラフ | Recharts |
 | アイコン | lucide-react |
-| バックエンド / DB | Supabase（PostgreSQL + Auth + REST API） |
-| 認証 | Google OAuth 2.0（Supabase Auth経由） |
+| 認証 | Firebase Authentication（Googleログイン） |
+| DB | Cloud Firestore（セキュリティルールでユーザーごとにアクセス制御） |
 | デプロイ | Vercel |
 
 ---
@@ -82,7 +87,11 @@ React + Supabase で作成した家計簿アプリです。
 ### ⑤ 定期取引
 - 家賃・通信費などの固定費／給与をテンプレとして登録
 - ダッシュボードのボタンで当月1日付の取引として一括反映
-- 反映済みのテンプレは記録しておき、同じ月に二重登録されない（フロント側の判定＋DBのユニーク制約）
+- 同じ月に何度押しても二重登録されない
+
+### ⑥ ゲストモード
+- ログインなしで、サンプルデータを使って全機能を操作できる
+- データはメモリ上だけに置き、保存はしない（リロードでサンプルに戻る）
 
 ---
 
@@ -91,34 +100,49 @@ React + Supabase で作成した家計簿アプリです。
 ### 機能単位のディレクトリ構成
 ```
 src/
-├── app/            # ルーティング・共通レイアウト
+├── app/            # ルーティング・共通レイアウト・ルートガード
+├── data/           # データの保存先（Firestore / ゲスト用）
 ├── features/
 │   ├── auth/         # 認証（AuthContext, LoginPage）
 │   ├── dashboard/    # ダッシュボード
 │   ├── transactions/ # 取引の追加・一覧・TransactionsContext
 │   └── settings/     # カテゴリ・定期取引（useCategories, useRecurring）
 ├── shared/hooks/   # 汎用Hook（useLocalStorage）
-└── lib/            # Supabaseクライアント
+└── lib/            # Firebase初期化・日付ユーティリティ
+```
+
+### 保存先を差し替えられるリポジトリ層
+データの読み書きを `data/firestoreRepo.js`（Firestore）と `data/guestRepo.js`（メモリ上のサンプルデータ）に分け、どちらも同じAPI（`listTransactions` / `addTransactions` など）を持たせています。
+`AuthContext` がログイン方法に応じてどちらかを渡すので、画面側は保存先の違いを意識せずに同じコードで動きます。ゲストモードはこの仕組みで実現しています。
+
+```js
+// ログイン方法に応じて保存先を切り替える（AuthContext）
+const repo = useMemo(() => {
+  if (guestRepo) return guestRepo;                    // ゲスト → サンプルデータ
+  if (user) return createFirestoreRepo(user.uid);     // Googleログイン → Firestore
+  return null;
+}, [guestRepo, user]);
 ```
 
 ### Context / カスタムHookによる関心の分離
-データ取得・更新ロジックを `TransactionsContext`（取引）と `useCategories` / `useRecurring`（設定系）に切り出し、UIコンポーネントはデータ操作の詳細を知らなくて済む設計にしています。
-取引データは複数画面（ダッシュボード・一覧・追加）で共有するため Context にまとめ、追加した取引がすぐ他の画面にも反映されるようにしています。
+取引は `TransactionsContext`、設定系は `useCategories` / `useRecurring` に処理をまとめ、UIコンポーネントはデータ操作の詳細を知らなくて済む設計にしています。
+取引データはダッシュボード・一覧・追加の3画面で共有するため Context にまとめ、追加した取引がすぐ他の画面にも反映されるようにしています。
 
-```js
-// コンポーネント側はAPIだけ使う
-const { transactions, addTransaction, deleteTransaction } = useTransactions();
+### Firestore セキュリティルールでユーザーごとにデータを分離
+データは `users/{uid}/transactions` のようにユーザーごとのパスに保存し、セキュリティルールで「ログイン中の本人のパスだけ読み書きできる」ようにしています。フロントエンドから直接DBを操作する構成でも、他ユーザーのデータにはアクセスできません。取引は種別・金額・日付の形もルール側でチェックしています（`firestore.rules`）。
+
+```
+match /users/{uid}/transactions/{id} {
+  allow read, delete: if isOwner(uid);
+  allow create, update: if isOwner(uid) && isValidTransaction(request.resource.data);
+}
 ```
 
-### Supabase × Row Level Security（RLS）
-SupabaseのRLSポリシーにより、ログインユーザーは自分のデータにしかアクセスできません。フロントエンドから直接DBを叩く構成でも、他ユーザーのデータが漏れない設計です。
+### 定期取引の二重反映を「IDの設計」で防ぐ
+定期取引から反映した取引のIDを `rec_{テンプレID}_{月}` に固定しています。同じ月に何度反映しても同じIDへの書き込みになるため、データが重複しません。
 
-```sql
--- 自分のデータのみ操作を許可するRLSポリシー
-create policy "own data only"
-  on transactions for all
-  using (auth.uid() = user_id);
-```
+### 日付はローカル時刻で扱う
+`toISOString()` はUTCになり、日本時間の0〜9時に「前日」扱いになるため、日付の計算は `lib/dates.js` にまとめてローカル時刻で行っています。
 
 ### React Context による認証状態の一元管理
 `AuthContext` でログイン状態をグローバルに管理し、`RequireAuth` コンポーネントで未ログイン時はログイン画面を表示するルートガードを実装しています。
@@ -129,8 +153,9 @@ create policy "own data only"
 
 CSS変数とメディアクエリで両対応しています。
 
-### localStorage が使えない環境への配慮
-`useLocalStorage` Hook は読み書きを try/catch で包み、Safariのプライベートモードなどで localStorage が使えなくてもアプリが落ちないようにしています。
+### 設定がなくても落ちない作り
+- Firebase の環境変数が未設定のときは、Googleログインを無効にしてゲストモードだけ使えるようにしています
+- `useLocalStorage` Hook は読み書きを try/catch で包み、Safariのプライベートモードなどで localStorage が使えなくてもアプリが落ちないようにしています
 
 ---
 
@@ -140,66 +165,35 @@ CSS変数とメディアクエリで両対応しています。
 git clone https://github.com/yusuketoyoda0716-hash/kakeibo-spa.git
 cd kakeibo-spa
 npm install
-cp .env.example .env   # .env に実際のキーを記入
+cp .env.example .env   # .env に Firebase の設定値を記入（未記入でもゲストモードは動きます）
 npm run dev
 ```
 
-### 環境変数
+### Firebase のセットアップ
 
-`.env.example` を参考に `.env` ファイルを作成してください。
+1. [Firebase コンソール](https://console.firebase.google.com/) でプロジェクトを作成
+2. 「Authentication」→「Sign-in method」で **Google** を有効化
+3. 「Authentication」→「設定」→「承認済みドメイン」にデプロイ先のドメイン（例：`kakeibo-spa.vercel.app`）を追加
+4. 「Firestore Database」を作成し、「ルール」タブに `firestore.rules` の内容を貼り付けて公開
+5. 「プロジェクトの設定」→「マイアプリ」でウェブアプリを追加し、表示された設定値を `.env` に記入
 
 ```
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
 ```
 
-### Supabase のセットアップ
+Vercel にデプロイする場合は、同じ値を Vercel の「Environment Variables」にも登録してください。
 
-1. Supabaseプロジェクトを新規作成
-2. Authentication → Providers で Google を有効化（Google Cloud で OAuth クライアントを作成）
-3. Authentication → URL Configuration に `http://localhost:5173` とデプロイ先URLを追加
-4. SQL Editor で以下を実行してテーブルを作成
+### データ構成（Firestore）
 
-```sql
-create table transactions (
-  id text primary key,            -- アプリ側で crypto.randomUUID() を生成して保存
-  user_id uuid references auth.users not null,
-  date text not null,             -- 例：2026-10-27
-  type text not null check (type in ('expense', 'income')),
-  category text not null,
-  amount integer not null,        -- 円（整数）
-  note text,
-  recurring_id text,              -- 定期取引から反映した場合のテンプレID
-  applied_month text,             -- 反映した月（例：2026-10）
-  created_at timestamptz default now(),
-  -- 同じテンプレを同じ月に二重反映しないための制約
-  unique (user_id, recurring_id, applied_month)
-);
-
-create table categories (
-  id bigint generated always as identity primary key,
-  user_id uuid references auth.users not null,
-  name text not null
-);
-
-create table recurring (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users not null,
-  type text not null check (type in ('expense', 'income')),
-  category text not null,
-  amount numeric not null,
-  note text
-);
-
--- RLS有効化
-alter table transactions enable row level security;
-alter table categories enable row level security;
-alter table recurring enable row level security;
-
--- ポリシー設定
-create policy "own data only" on transactions for all using (auth.uid() = user_id);
-create policy "own data only" on categories for all using (auth.uid() = user_id);
-create policy "own data only" on recurring for all using (auth.uid() = user_id);
+```
+users/{uid}/transactions/{id}   date, type, category, amount, note, recurringId?, appliedMonth?, createdAt
+users/{uid}/categories/{id}     name, order
+users/{uid}/recurring/{id}      type, category, amount, note, createdAt
 ```
 
 ---
